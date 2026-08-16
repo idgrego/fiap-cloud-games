@@ -21,25 +21,31 @@ namespace fase_01.infrastructure.data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.FullName).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.NickName).HasMaxLength(50);
-                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Admin).IsRequired();
                 entity.Property(e => e.CreatedAt).IsRequired();
                 entity.Property(e => e.ValidatedAt);
+
+                entity.ToTable(t => t.HasCheckConstraint(
+                    "CK_Users_ValidatedAt_GreaterThan_CreatedAt",
+                    "[ValidatedAt] IS NULL OR [ValidatedAt] >= [CreatedAt]"
+                ));
             });
 
             modelBuilder.Entity<Game>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Manufacturer).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Manufacturer).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.ReleasedAt);
+                entity.Property(e => e.Description);
                 entity.Property(e => e.Online).IsRequired();
                 entity.Property(e => e.Multiplayer).IsRequired();
                 entity.Property(e => e.CategoryId).IsRequired();
-                entity.Property(e => e.UrlGame).HasMaxLength(200);
-                entity.Property(e => e.UrlVideo).HasMaxLength(200);
+                entity.Property(e => e.UrlGame).HasMaxLength(255);
+                entity.Property(e => e.UrlVideo).HasMaxLength(255);
                 entity.Property(e => e.CreatedAt).IsRequired();
                 entity.Ignore(e => e.Category);
             });

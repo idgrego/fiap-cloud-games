@@ -7,6 +7,7 @@ namespace fase_01.domain.entities
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Manufacturer { get; set; } = string.Empty;
+        public DateOnly? ReleasedAt { get; set; }
         public string? Description { get; set; }
         public bool Online { get; set; }
         public bool Multiplayer { get; set; }
