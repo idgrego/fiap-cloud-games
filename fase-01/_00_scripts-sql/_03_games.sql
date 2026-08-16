@@ -16,8 +16,9 @@ INSERT INTO EnumGamesCategories (name) VALUES
 
 CREATE TABLE Games (
     id INT NOT NULL PRIMARY KEY IDENTITY(1,1),
-    name VARCHAR(200) NOT NULL,
-    manufacturer VARCHAR(200) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    manufacturer VARCHAR(255) NOT NULL,
+    released_at DATE NULL,
     description VARCHAR(MAX) NULL,
     online BIT NOT NULL DEFAULT 0,
     multiplyer BIT NOT NULL DEFAULT 0,
