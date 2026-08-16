@@ -1,0 +1,77 @@
+@model IEnumerable<UserDto>
+
+@{
+    ViewData["Title"] = "Usuários Cadastrados";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people-fill"></i> Gerenciamento de Usuários</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill"></i> Novo Usuário
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center" role="alert">
+        Nenhum usuário cadastrado até o momento. Clique em <strong>Novo Usuário</strong> para cadastrar!
+    </div>
+}
+else
+{
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover align-middle bg-white mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 60px;">Foto</th>
+                    <th>Nome Completo</th>
+                    <th>Nickname</th>
+                    <th>E-mail</th>
+                    <th>Perfil</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <img src="@Url.Action("GetThumbnail", "User", new { id = item.Id })" alt="@item.FullName"
+                                 class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=U';" />
+                        </td>
+                        <td class="fw-bold">@item.FullName</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.NickName) ? "-" : item.NickName)</td>
+                        <td>@item.Email</td>
+                        <td>
+                            @if (item.Admin)
+                            {
+                                <span class="badge bg-danger">Administrador</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Usuário</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.ValidatedAt.HasValue)
+                            {
+                                <span class="badge bg-success">E-mail Validado</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Pendente</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">Detalhes</a>
+                            <a asp-action="Update" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm">Editar</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Excluir</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

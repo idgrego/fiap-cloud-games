@@ -1,0 +1,60 @@
+@model IEnumerable<GameDto>
+
+@{
+    ViewData["Title"] = "Catálogo de Jogos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-controller"></i> Catálogo de Jogos</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Novo Jogo
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center" role="alert">
+        Nenhum jogo cadastrado até o momento. Clique em <strong>Novo Jogo</strong> para adicionar!
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="position-relative text-center bg-light p-2" style="height: 180px; overflow: hidden;">
+                        <img src="@Url.Action("GetThumbnail", "Game", new { id = item.Id })" alt="@item.Name"
+                             class="img-fluid rounded my-auto" style="max-height: 100%; object-fit: contain;"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/300x180?text=Sem+Foto';" />
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">@item.Name</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@item.Manufacturer</h6>
+
+                        <p class="card-text text-truncate">@(string.IsNullOrWhiteSpace(item.Description) ? "Sem descrição." :
+                                                                            item.Description)</p>
+
+                            <div class="mb-2">
+                                <span class="badge bg-secondary">@item.CategoryName</span>
+                                @if (item.Online)
+                                {
+                                    <span class="badge bg-success">Online</span>
+                                }
+                                @if (item.Multiplayer)
+                                {
+                                    <span class="badge bg-info text-dark">Multiplayer</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between">
+                            <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">Detalhes</a>
+                            <a asp-action="Update" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm">Editar</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Excluir</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }

@@ -1,0 +1,73 @@
+@model UserDto
+
+@{
+    ViewData["Title"] = "Detalhes do Usuário";
+}
+
+<div class="container mt-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Usuários</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.FullName</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">@Model.FullName</h3>
+            @if (Model.Admin)
+            {
+                <span class="badge bg-danger fs-6">Administrador</span>
+            }
+            else
+            {
+                <span class="badge bg-light text-dark fs-6">Usuário</span>
+            }
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center mb-3 mb-md-0">
+                    <img src="@Url.Action("GetPhoto", "User", new { id = Model.Id })" alt="@Model.FullName"
+                         class="rounded-circle img-thumbnail shadow-sm"
+                         style="width: 200px; height: 200px; object-fit: cover;"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=Usu%C3%A1rio';" />
+                </div>
+                <div class="col-md-8">
+                    <dl class="row">
+                        <dt class="col-sm-4">Nome Completo</dt>
+                        <dd class="col-sm-8">@Model.FullName</dd>
+
+                        <dt class="col-sm-4">Apelido / Nickname</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.NickName) ? "-" : Model.NickName)</dd>
+
+                        <dt class="col-sm-4">E-mail</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4">Validação do E-mail</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.ValidatedAt.HasValue)
+                            {
+                                <span class="badge bg-success">Validado em
+                                    @Model.ValidatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                }
+                            else
+                                {
+                                    <span class="badge bg-warning text-dark">Pendente de Validação</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Data de Cadastro</dt>
+                            <dd class="col-sm-8">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+                <div>
+                    <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-warning me-2">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Excluir</a>
+                </div>
+            </div>
+        </div>
+    </div>
