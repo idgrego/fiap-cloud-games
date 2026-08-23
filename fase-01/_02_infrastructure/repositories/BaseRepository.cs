@@ -7,7 +7,7 @@ namespace fase_01.infrastructure.repositories
     public abstract class BaseRepository<T, TKey>
     : IRepositoryBase<T, TKey> where T : class
     {
-        private readonly AppDbContext _context;
+        protected readonly AppDbContext _context;
 
         public BaseRepository(AppDbContext context)
         {

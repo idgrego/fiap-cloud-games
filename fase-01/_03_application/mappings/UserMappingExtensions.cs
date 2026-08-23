@@ -41,5 +41,22 @@ namespace fase_01.application.mappings
             user.ValidatedAt = dto.ValidatedAt;
             return user;
         }
+
+        /// <summary>
+        /// Converte um objeto RegisterDto para User.
+        /// </summary>
+        /// <param name="dto">Objeto RegisterDto a ser convertido</param>
+        /// <returns>Objeto User convertido</returns>
+        public static User ToEntity(this RegisterDto dto)
+        {
+            var user = new User();
+            user.FullName = dto.FullName;
+            user.Email = dto.Email;
+            user.NickName = dto.NickName;
+            user.Admin = false;
+            user.CreatedAt = DateTime.UtcNow;
+            user.ValidatedAt = null;
+            return user;
+        }
     }
 }
