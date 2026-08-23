@@ -73,9 +73,9 @@ public class UserController : Controller
         return View(entity.ToDto());
     }
 
-    [HttpPut]
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Update(UserDto dto)
+    public async Task<IActionResult> Update(int id, UserDto dto)
     {
 
         if (ModelState.IsValid)
@@ -107,7 +107,7 @@ public class UserController : Controller
         return View(entity.ToDto());
     }
 
-    [HttpDelete]
+    [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
