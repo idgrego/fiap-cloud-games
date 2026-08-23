@@ -90,9 +90,9 @@ public class GameController : Controller
         return View(entity.ToDto());
     }
 
-    [HttpPut]
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Update(GameDto dto)
+    public async Task<IActionResult> Update(int id, GameDto dto)
     {
         if (ModelState.IsValid)
         {
@@ -124,7 +124,7 @@ public class GameController : Controller
         return View(entity.ToDto());
     }
 
-    [HttpDelete]
+    [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
