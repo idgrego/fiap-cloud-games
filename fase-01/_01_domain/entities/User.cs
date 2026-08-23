@@ -21,5 +21,7 @@ namespace fase_01.domain.entities
         /// Gets or sets the date and time when the user has validated his email.
         /// </summary>
         public DateTime? ValidatedAt { get; set; }
+
+        public Account? Account { get; set; }
     }
 }

@@ -75,6 +75,20 @@ namespace fase_01.infrastructure.data
                       .HasForeignKey<GamePhoto>(e => e.Id)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<Account>(entity =>
+            {
+                entity.ToTable("Accounts");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Approved).IsRequired().HasDefaultValue(false);
+                entity.Property(e => e.FailedCounter).IsRequired().HasDefaultValue(0);
+                entity.HasOne(e => e.User)
+                      .WithOne(u => u.Account)
+                      .HasForeignKey<Account>(e => e.Id)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
         }
     }
 }
