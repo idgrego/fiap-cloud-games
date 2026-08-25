@@ -4,10 +4,13 @@ using fase_01.domain.entities;
 using fase_01.application.interfaces;
 using fase_01.application.dtos;
 using fase_01.application.mappings;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fase_01.Controllers;
 
-public class UserController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class UserController : ControllerBase
 {
 
     private readonly IUserRepository _userRepository;
@@ -20,99 +23,67 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<IEnumerable<UserDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll()
     {
         var entities = await _userRepository.ListAllAsync();
         var dtos = entities.Select(u => u.ToDto());
-        return View(dtos);
+        return Ok(dtos);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Detail(int id)
+    [HttpGet("{id:int}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<UserDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetById(int id)
     {
         var entity = await _userRepository.GetByIdAsync(id);
         if (entity == null) return NotFound();
-        return View(entity.ToDto());
+        return Ok(entity.ToDto());
     }
-
-    #region create item
-
-    [HttpGet]
-    public IActionResult Create()
-    {
-        return View(new UserDto());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(UserDto dto)
-    {
-        if (ModelState.IsValid)
-        {
-            var entity = dto.ToEntity();
-            await _userRepository.AddAsync(entity);
-
-            if (dto.Photo != null && dto.Photo.Length > 0)
-                await _photoService.SaveUserPhotoAsync(entity.Id, dto.Photo);
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        return View(dto);
-    }
-
-    #endregion
 
     #region update item
 
-    [HttpGet]
-    public async Task<IActionResult> Update(int id)
-    {
-        var entity = await _userRepository.GetByIdAsync(id);
-        if (entity == null) return NotFound();
-        return View(entity.ToDto());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Update(int id, UserDto dto)
     {
 
         if (ModelState.IsValid)
-        {
-            var existingEntity = await _userRepository.GetByIdAsync(dto.Id);
-            if (existingEntity == null) return NotFound();
+            return BadRequest(ModelState);
 
-            var entity = dto.ToEntity(existingEntity);
-            await _userRepository.UpdateAsync(entity);
+        var existingEntity = await _userRepository.GetByIdAsync(dto.Id);
+        if (existingEntity == null) return NotFound();
 
-            if (dto.Photo != null && dto.Photo.Length > 0)
-                await _photoService.SaveUserPhotoAsync(entity.Id, dto.Photo);
+        var entity = dto.ToEntity(existingEntity);
+        await _userRepository.UpdateAsync(entity);
 
-            return RedirectToAction(nameof(Index));
-        }
+        if (dto.Photo != null && dto.Photo.Length > 0)
+            await _photoService.SaveUserPhotoAsync(entity.Id, dto.Photo);
 
-        return View(dto);
+        return NoContent();
+
     }
 
     #endregion
 
     #region delete item
 
-    [HttpGet]
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
     {
-        var entity = await _userRepository.GetByIdAsync(id);
-        if (entity == null) return NotFound();
-        return View(entity.ToDto());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
         await _userRepository.DeleteAsync(id);
-        return RedirectToAction(nameof(Index));
+        return NoContent();
     }
 
     #endregion

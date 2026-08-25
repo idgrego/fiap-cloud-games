@@ -6,6 +6,8 @@ using fase_01.domain.interfaces;
 using fase_01.infrastructure.data;
 using fase_01.infrastructure.repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,29 +19,29 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,                  // Número máximo de tentativas
             maxRetryDelay: TimeSpan.FromSeconds(10), // Intervalo entre tentativas
-        #region explicação do errorNumbersToAdd
-            // A propriedade errorNumbersToAdd serve para registrar 
-            // números de erros específicos do SQL Server aos quais 
-            // a política de tentativa automática (retry policy) 
-            // do Entity Framework Core deve reagir.
-
-            // Por padrão, quando você chama .EnableRetryOnFailure(), 
-            // o EF Core já possui uma lista interna pré-definida de códigos 
-            // de erro transitórios conhecidos do SQL Server 
-            // (por exemplo, erros de timeout de conexão, servidor ocupado, 
-            // perda momentânea de pacote, etc.).
-
-            // se a sua aplicação ou o seu banco no Azure SQL gerar um código 
-            // de erro customizado ou um erro específico que o EF Core não 
-            // trata por padrão como "transitório", você pode passá-lo na 
-            // propriedade errorNumbersToAdd.
-
-            // errorNumbersToAdd: new[] { 40613, 10928 } // Adiciona retentativas para erros específicos do Azure
-            // * 40613: Database is not currently available (quando o banco Azure SQL está em pausa/acordando).
-            // * 10928: Resource limit reached (limite de conexões ou DTUs atingido temporariamente no Azure).
-            // Se você não tiver erros específicos para adicionar, pode deixar como null
-        #endregion
             errorNumbersToAdd: null);
+        #region explicação do errorNumbersToAdd
+        // A propriedade errorNumbersToAdd serve para registrar 
+        // números de erros específicos do SQL Server aos quais 
+        // a política de tentativa automática (retry policy) 
+        // do Entity Framework Core deve reagir.
+
+        // Por padrão, quando você chama .EnableRetryOnFailure(), 
+        // o EF Core já possui uma lista interna pré-definida de códigos 
+        // de erro transitórios conhecidos do SQL Server 
+        // (por exemplo, erros de timeout de conexão, servidor ocupado, 
+        // perda momentânea de pacote, etc.).
+
+        // se a sua aplicação ou o seu banco no Azure SQL gerar um código 
+        // de erro customizado ou um erro específico que o EF Core não 
+        // trata por padrão como "transitório", você pode passá-lo na 
+        // propriedade errorNumbersToAdd.
+
+        // errorNumbersToAdd: new[] { 40613, 10928 } // Adiciona retentativas para erros específicos do Azure
+        // * 40613: Database is not currently available (quando o banco Azure SQL está em pausa/acordando).
+        // * 10928: Resource limit reached (limite de conexões ou DTUs atingido temporariamente no Azure).
+        // Se você não tiver erros específicos para adicionar, pode deixar como null
+        #endregion
     })
 );
 
@@ -209,16 +211,53 @@ builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 
-builder.Services.AddControllersWithViews();
+// Configurar Web API puro (Substituindo AddControllersWithViews por AddControllers)
+builder.Services.AddControllers();
+
+// 1. Configurar OpenAPI Nativo do .NET 10 com suporte a JWT
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Title = "FIAP Cloud Games API",
+            Version = "v1",
+            Description = "API RESTful para gerenciamento de jogos e usuários"
+        };
+
+        // Adiciona a definição do Bearer Token
+        var scheme = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Insira o token JWT gerado no endpoint de login"
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes?.Add("Bearer", scheme);
+
+        return Task.CompletedTask;
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// 2. Habilitar o endpoint do OpenAPI e a Interface do Scalar no ambiente de Desenvolvimento
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    // Expõe a documentação JSON em /openapi/v1.json
+    app.MapOpenApi();
+
+    // Expõe a UI moderna do Scalar em /scalar/v1
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "FIAP Cloud Games API - Documentação";
+        options.Theme = ScalarTheme.Purple;
+        options.DefaultHttpClient = new(ScalarTarget.Http, ScalarClient.Http11);
+    });
 }
 
 app.UseHttpsRedirection();
@@ -229,12 +268,8 @@ app.UseRouting();
 app.UseAuthentication(); // <- OBRIGATÓRIO estar antes do UseAuthorization
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+// Mapear rotas de API Controllers
+app.MapControllers();
 
 
 app.Run();

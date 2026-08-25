@@ -5,10 +5,13 @@ using fase_01.application.interfaces;
 using fase_01.application.dtos;
 using fase_01.application.mappings;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fase_01.Controllers;
 
-public class AccountController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class AccountController : ControllerBase
 {
 
     private readonly IUserRepository _userRepository;
@@ -33,32 +36,21 @@ public class AccountController : Controller
 
     #region login/logout
 
-    [HttpGet]
-    public IActionResult Login()
-    {
-        // Se o usuário já estiver autenticado, redireciona para a Home
-        if (User.Identity != null && User.Identity.IsAuthenticated)
-            return RedirectToAction("Index", "Home");
-
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginDto dto)
     {
         if (!ModelState.IsValid)
-            return View(dto);
+            return BadRequest(ModelState);
 
         // 1. busca o usuário pelo e-mail
         var user = await _userRepository.GetByEmailAsync(dto.Email);
 
         // 2. valida a senha
         if (user == null || user.Account == null || !_passwordService.VerifyPassword(dto.Password!, user.Account!.PasswordHash!, user))
-        {
-            ModelState.AddModelError(string.Empty, "Invalid email or password.");
-            return View(dto);
-        }
+            return Unauthorized(new { message = "Invalid email or password." });
 
         // 3. Gerar o Token JWT
         var token = _jwtTokenService.GenerateToken(user, dto.RememberMe);
@@ -77,23 +69,20 @@ public class AccountController : Controller
         // 5. Salvar o Token no Cookie "jwt_token"
         Response.Cookies.Append("jwt_token", token, cookieOptions);
 
-        TempData["SuccessMessage"] = $"Bem-vindo de volta, {user.FullName}!";
-
-        return RedirectToAction("Index", "Home");
+        return Ok(new { token, user = user.ToDto() });
 
     }
 
     // POST: /Account/Logout
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Logout()
     {
         // Remove o Cookie HTTP contendo o JWT
         Response.Cookies.Delete("jwt_token");
 
-        TempData["SuccessMessage"] = "Você saiu do sistema.";
-
-        return RedirectToAction("Login");
+        return Ok(new { message = "Logout realizado com sucesso" });
     }
 
 
@@ -101,26 +90,18 @@ public class AccountController : Controller
 
     #region registration
 
-    [HttpGet]
-    public IActionResult Register()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Registrer(RegisterDto dto)
+    [HttpPost("register")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         if (!ModelState.IsValid)
-            return View(dto);
+            return BadRequest(ModelState);
 
         // 1. Validar se o e-mail já existe no banco
         var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
         if (existingUser != null)
-        {
-            ModelState.AddModelError("Email", "Este e-mail já está em uso por outro usuário.");
-            return View(dto);
-        }
+            return BadRequest(new { message = "Este e-mail já está em uso por outro usuário." });
 
         // 2. Criar o usuário
         var entity = dto.ToEntity();
@@ -137,10 +118,8 @@ public class AccountController : Controller
         if (dto.Photo != null && dto.Photo.Length > 0)
             await _photoService.SaveUserPhotoAsync(entity.Id, dto.Photo);
 
-        TempData["SuccessMessage"] = "Registration completed successfully. Please log in.";
-
-        // 6. Redirecionar para a página de login
-        return RedirectToAction(nameof(Login));
+        // 6. Devolve o resultado
+        return CreatedAtAction(nameof(Register), new { id = entity.Id }, entity.ToDto());
 
     }
 

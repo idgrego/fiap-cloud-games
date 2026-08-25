@@ -6,10 +6,13 @@ using fase_01.domain.enums;
 using fase_01.application.dtos;
 using fase_01.application.services;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 
 namespace fase_01.Controllers;
 
-public class GameController : Controller
+[ApiController()]
+[Route("api/[controller]")]
+public class GameController : ControllerBase
 {
 
     private readonly IGameRepository _gameRepository;
@@ -22,15 +25,18 @@ public class GameController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    [ProducesResponseType<IEnumerable<GameDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll()
     {
         var entities = await _gameRepository.ListAllAsync();
         var dtos = entities.Select(g => g.ToDto());
-        return View(dtos);
+        return Ok(dtos);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Detail(int id)
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<GameDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetById(int id)
     {
         var entity = await _gameRepository.GetByIdAsync(id);
         if (entity == null) return NotFound();
@@ -45,91 +51,72 @@ public class GameController : Controller
                 await _photoService.SaveGamePhotoFromBytesAsync(entity.Id, downloadedBytes, "image/jpeg");
         }
 
-        return View(entity.ToDto());
+        return Ok(entity.ToDto());
     }
 
     #region create item
 
-    [HttpGet]
-    public IActionResult Create()
-    {
-        ViewBag.Categories = GameCategory.List().Select(i => new SelectListItem(i.Name, i.Code.ToString())).ToList();
-        return View(new GameDto());
-    }
-
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(GameDto dto)
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<GameDto>(StatusCodes.Status201Created)]
+    public async Task<IActionResult> Create([FromForm] GameDto dto)
     {
-        if (ModelState.IsValid)
-        {
-            var entity = dto.ToEntity();
-            await _gameRepository.AddAsync(entity);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-            if (dto.Photo != null && dto.Photo.Length > 0)
-                await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
+        var entity = dto.ToEntity();
+        await _gameRepository.AddAsync(entity);
 
-            return RedirectToAction(nameof(Index));
-        }
+        if (dto.Photo != null && dto.Photo.Length > 0)
+            await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
 
-        ViewBag.Categories = GameCategory.List().Select(i => new SelectListItem(i.Name, i.Code.ToString(), i.Code == dto.CategoryId)).ToList();
-        return View(dto);
+        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity.ToDto());
+
+
+        //ViewBag.Categories = GameCategory.List().Select(i => new SelectListItem(i.Name, i.Code.ToString(), i.Code == dto.CategoryId)).ToList();
     }
 
     #endregion
 
     #region update item
 
-    [HttpGet]
-    public async Task<IActionResult> Update(int id)
-    {
-        var entity = await _gameRepository.GetByIdAsync(id);
-        if (entity == null) return NotFound();
-
-        ViewBag.Categories = GameCategory.List().Select(i => new SelectListItem(i.Name, i.Code.ToString(), i.Code == entity.CategoryId)).ToList();
-        return View(entity.ToDto());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Update(int id, GameDto dto)
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Update(int id, [FromForm] GameDto dto)
     {
         if (ModelState.IsValid)
-        {
-            var existingEntity = await _gameRepository.GetByIdAsync(dto.Id);
-            if (existingEntity == null) return NotFound();
+            return BadRequest(ModelState);
 
-            var entity = dto.ToEntity(existingEntity);
-            await _gameRepository.UpdateAsync(entity);
+        var existingEntity = await _gameRepository.GetByIdAsync(dto.Id);
+        if (existingEntity == null) return NotFound();
 
-            if (dto.Photo != null && dto.Photo.Length > 0)
-                await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
+        var entity = dto.ToEntity(existingEntity);
+        await _gameRepository.UpdateAsync(entity);
 
-            return RedirectToAction(nameof(Index));
-        }
+        if (dto.Photo != null && dto.Photo.Length > 0)
+            await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
 
-        ViewBag.Categories = GameCategory.List().Select(i => new SelectListItem(i.Name, i.Code.ToString(), i.Code == dto.CategoryId)).ToList();
-        return View(dto);
+        return NoContent();
     }
 
     #endregion
 
     #region delete item
 
-    [HttpGet]
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(int id)
     {
-        var entity = await _gameRepository.GetByIdAsync(id);
-        if (entity == null) return NotFound();
-        return View(entity.ToDto());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
         await _gameRepository.DeleteAsync(id);
-        return RedirectToAction(nameof(Index));
+        return NoContent();
     }
 
     #endregion
