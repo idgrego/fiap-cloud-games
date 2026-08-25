@@ -18,13 +18,20 @@ A camada de **Aplicação (`_03_application`)** orquestra os casos de uso do sis
 _03_application/
 ├── dtos/
 │   ├── GameDto.cs
+│   ├── JwtSettingsDto.cs
+│   ├── LoginDto.cs
+│   ├── RegisterDto.cs
 │   └── UserDto.cs
 ├── interfaces/
+│   ├── IJwtTokenService.cs
+│   ├── IPasswordService.cs
 │   └── IPhotoService.cs
 ├── mappings/
 │   ├── GameMappingExtensions.cs
 │   └── UserMappingExtensions.cs
 └── services/
+    ├── JwtTokenService.cs
+    ├── PasswordService.cs
     └── PhotoService.cs
 ```
 
@@ -118,9 +125,134 @@ namespace fase_01.application.dtos
 }
 ```
 
+### 3. DTOs de Autenticação (`RegisterDto`, `LoginDto`, `JwtSettingsDto`)
+
+```csharp
+public class RegisterDto
+{
+    [Required(ErrorMessage = "O nome completo é obrigatório.")]
+    public string FullName { get; set; } = string.Empty;
+
+    public string? NickName { get; set; }
+
+    [Required, EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required, StringLength(100, MinimumLength = 6)]
+    public string Password { get; set; } = string.Empty;
+
+    [Required, Compare("Password")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public class LoginDto
+{
+    [Required, EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public string Password { get; set; } = string.Empty;
+
+    public bool RememberMe { get; set; }
+}
+
+public class JwtSettingsDto
+{
+    public string SecretKey { get; set; } = string.Empty;
+    public string Issuer { get; set; } = string.Empty;
+    public string Audience { get; set; } = string.Empty;
+    public int ExpirationInMinutes { get; set; } = 60;
+    public int RefreshTokenExpirationInDays { get; set; } = 30;
+}
+```
+
 ---
 
-## 🔄 Mapeamento com Métodos de Extensão C#
+## 🔐 Serviços de Autenticação e Criptografia de Senha
+
+### 1. `PasswordService.cs` (Hash Criptográfico de Senha)
+Utiliza `PasswordHasher<User>` do .NET Identity (algoritmo PBKDF2 com HMAC-SHA512 e *salt* único):
+
+```csharp
+namespace fase_01.application.services
+{
+    using fase_01.application.interfaces;
+    using fase_01.domain.entities;
+    using Microsoft.AspNetCore.Identity;
+
+    public class PasswordService : IPasswordService
+    {
+        private readonly PasswordHasher<User> _hasher = new();
+
+        public string HashPassword(string password) =>
+            _hasher.HashPassword(new User(), password);
+
+        public bool VerifyPassword(string providedPassword, string hashedPassword)
+        {
+            var result = _hasher.VerifyHashedPassword(new User(), hashedPassword, providedPassword);
+            return result == PasswordVerificationResult.Success || result == PasswordVerificationResult.SuccessRehashNeeded;
+        }
+    }
+}
+```
+
+### 2. `JwtTokenService.cs` (Geração de Tokens JWT)
+Gera o token JWT contendo claims de identidade (`NameIdentifier`, `Name`, `Email`, `nickname`, `Role`):
+
+```csharp
+namespace fase_01.application.services
+{
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Security.Claims;
+    using System.Text;
+    using fase_01.application.dtos;
+    using fase_01.application.interfaces;
+    using fase_01.domain.entities;
+    using Microsoft.Extensions.Options;
+    using Microsoft.IdentityModel.Tokens;
+
+    public class JwtTokenService : IJwtTokenService
+    {
+        private readonly JwtSettingsDto _jwtSettings;
+
+        public JwtTokenService(IOptions<JwtSettingsDto> jwtSettings)
+        {
+            _jwtSettings = jwtSettings.Value;
+        }
+
+        public string GenerateToken(User user, bool rememberMe = false)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Name, user.FullName),
+                new(ClaimTypes.Email, user.Email),
+                new("nickname", user.NickName ?? string.Empty),
+                new(ClaimTypes.Role, user.Admin ? "Admin" : "User")
+            };
+
+            var expires = rememberMe
+                ? DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationInDays)
+                : DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = expires,
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+    }
+}
+```
 
 Em vez de poluir os Controllers com lógicas repetitivas de conversão ou utilizar bibliotecas pesadas de Reflection como AutoMapper, adotou-se o uso de **Métodos de Extensão Estáticos** (`_03_application/mappings/`):
 

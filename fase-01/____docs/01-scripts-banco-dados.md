@@ -24,18 +24,25 @@ Os scripts SQL estão organizados no diretório `_00_scripts-sql/`:
 
 ## 📐 Estrutura Relacional (Modelo DDL)
 
-### 1. Tabela de Usuários (`Users` e `UsersPhotos`)
+### 1. Tabela de Usuários (`Users`, `Accounts` e `UsersPhotos`)
 
 ```sql
 CREATE TABLE Users (
     id INT NOT NULL PRIMARY KEY IDENTITY(1,1),
     fullname VARCHAR(255) NOT NULL,
     nickname VARCHAR(50) NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     admin BIT NOT NULL DEFAULT 0,
     created_at DATETIME2 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     validated_at DATETIME2 NULL,
     CONSTRAINT CK_Users_ValidatedAt_GreaterThan_CreatedAt CHECK (validated_at IS NULL OR validated_at >= created_at)
+);
+
+CREATE TABLE Accounts (
+    id INT NOT NULL PRIMARY KEY REFERENCES Users(id) ON DELETE CASCADE,
+    password_hash VARCHAR(255) NOT NULL,
+    approved BIT NOT NULL DEFAULT 0,
+    failed_counter INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE UsersPhotos (
@@ -46,8 +53,8 @@ CREATE TABLE UsersPhotos (
 );
 ```
 
-> [!NOTE] Destaque de Modelagem: Tabela de Fotos (1 x 0..1)
-> A chave primária `id` em `UsersPhotos` é também uma Chave Estrangeira que aponta para `Users(id)`. Isso garante a cardinalidade **1 para 0..1** (um usuário tem no máximo uma foto), economizando espaço e evitando a necessidade de tabelas associativas secundárias. O `ON DELETE CASCADE` garante que, ao excluir um usuário, sua foto seja automaticamente removida do banco.
+> [!NOTE] Destaque de Modelagem: Tabela de Credenciais (`Accounts`) e Fotos (`UsersPhotos`)
+> Tanto a chave primária `id` em `Accounts` quanto em `UsersPhotos` são Chaves Estrangeiras apontando para `Users(id)`. Isso garante a cardinalidade **1 para 0..1** (um usuário possui no máximo uma conta com hash de senha e no máximo uma foto de perfil). O `ON DELETE CASCADE` garante a exclusão automática de credenciais e mídia ao remover um usuário.
 
 ---
 

@@ -50,6 +50,7 @@ namespace fase_01.infrastructure.data
         public DbSet<Game> Games => Set<Game>();
         public DbSet<UserPhoto> UserPhotos => Set<UserPhoto>();
         public DbSet<GamePhoto> GamePhotos => Set<GamePhoto>();
+        public DbSet<Account> Accounts => Set<Account>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +72,20 @@ namespace fase_01.infrastructure.data
                     "CK_Users_ValidatedAt_GreaterThan_CreatedAt",
                     "[ValidatedAt] IS NULL OR [ValidatedAt] >= [CreatedAt]"
                 ));
+            });
+
+            // Mapeamento da Entidade Account (Relacionamento 1 <-> 0..1 com User)
+            modelBuilder.Entity<Account>(entity =>
+            {
+                entity.ToTable("Accounts");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Approved).IsRequired().HasDefaultValue(false);
+                entity.Property(e => e.FailedCounter).IsRequired().HasDefaultValue(0);
+                entity.HasOne(e => e.User)
+                      .WithOne(u => u.Account)
+                      .HasForeignKey<Account>(e => e.Id)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Mapeamento da Entidade Game
@@ -171,7 +186,7 @@ namespace fase_01.infrastructure.repositories
 ```
 
 ### 2. Repositórios Concretos
-Exemplo do `GameRepository.cs`:
+Exemplo de `UserRepository.cs` com suporte a autenticação de conta:
 
 ```csharp
 namespace fase_01.infrastructure.repositories
@@ -179,10 +194,32 @@ namespace fase_01.infrastructure.repositories
     using fase_01.domain.entities;
     using fase_01.domain.interfaces;
     using fase_01.infrastructure.data;
+    using Microsoft.EntityFrameworkCore;
 
-    public class GameRepository : BaseRepository<Game, int>, IGameRepository
+    public class UserRepository : BaseRepository<User, int>, IUserRepository
     {
-        public GameRepository(AppDbContext context) : base(context) { }
+        public UserRepository(AppDbContext context) : base(context) { }
+
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await Context.Users
+                .Include(u => u.Account)
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        }
+
+        public async Task<User> CreateWithAccountAsync(User user, string passwordHash)
+        {
+            user.Account = new Account
+            {
+                PasswordHash = passwordHash,
+                Approved = true,
+                FailedCounter = 0
+            };
+
+            await Context.Users.AddAsync(user);
+            await Context.SaveChangesAsync();
+            return user;
+        }
     }
 }
 ```

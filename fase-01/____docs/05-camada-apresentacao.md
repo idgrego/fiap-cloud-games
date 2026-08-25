@@ -1,6 +1,6 @@
-# 05. Camada de Apresentação (Presentation Layer)
+# 05. Camada de Apresentação (Presentation Layer - Web API)
 
-#aspnetcore #mvc #razor #bootstrap #controllers #views #csharp
+#aspnetcore #webapi #rest #jwt #openapi #scalar #controllers #csharp
 
 Voltar para a [[index|Visão Geral]] | Ver anterior: [[04-camada-aplicacao|04. Camada de Aplicação]]
 
@@ -8,7 +8,9 @@ Voltar para a [[index|Visão Geral]] | Ver anterior: [[04-camada-aplicacao|04. C
 
 ## 🎯 Objetivo
 
-A camada de **Apresentação** é a interface do usuário com a aplicação web. Ela é construída com o padrão **ASP.NET Core MVC (Model-View-Controller)**, utilizando Views Razor renderizadas no servidor e estilizadas com **Bootstrap 5.3** e **Bootstrap Icons**.
+A camada de **Apresentação** é a interface HTTP do sistema. A aplicação foi convertida para uma **Web API RESTful desacoplada**, pronta para ser consumida por qualquer cliente front-end (React, Angular, Vue, Mobile ou aplicações desktop).
+
+A API expõe dados e ações no formato **JSON**, gerencia autenticação e autorização via **JWT Bearer Tokens** e fornece documentação interativa moderna através de **OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`)** e **Scalar UI (`Scalar.AspNetCore`)**.
 
 ---
 
@@ -16,53 +18,168 @@ A camada de **Apresentação** é a interface do usuário com a aplicação web.
 
 ```
 Controllers/
+├── AccountController.cs
 ├── GameController.cs
-├── HomeController.cs
 └── UserController.cs
-
-Views/
-├── _ViewImports.cshtml
-├── _ViewStart.cshtml
-├── Game/
-│   ├── Create.cshtml
-│   ├── Delete.cshtml
-│   ├── Detail.cshtml
-│   ├── Edit.cshtml
-│   └── Index.cshtml
-├── Home/
-│   ├── Index.cshtml
-│   └── Privacy.cshtml
-├── Shared/
-│   ├── _Layout.cshtml
-│   ├── _Layout.cshtml.css
-│   ├── _ValidationScriptsPartial.cshtml
-│   └── Error.cshtml
-└── User/
-    ├── Create.cshtml
-    ├── Delete.cshtml
-    ├── Detail.cshtml
-    ├── Edit.cshtml
-    └── Index.cshtml
+Properties/
+└── launchSettings.json
+Program.cs
 ```
 
 ---
 
-## 🕹️ Controllers MVC
+## 🛡️ Autenticação e Autorização via JWT
 
-### 1. `GameController.cs` e Endpoints de Mídia
-O `GameController` gerencia todo o ciclo de vida de cadastro, listagem, edição e exclusão de jogos, além de expor endpoints que servem os arquivos de imagem/miniatura gravados em formato binário no banco de dados.
+A segurança da API é construída sobre o middleware `Microsoft.AspNetCore.Authentication.JwtBearer`:
+
+1. **Validação Estrita de Assinatura e Expiração:** O middleware valida a `SecretKey`, `Issuer`, `Audience` e expiração do token sem tolerância de tempo extra (`ClockSkew = TimeSpan.Zero`).
+2. **Re-validação no Banco de Dados (`OnTokenValidated`):** A cada requisição autenticada, o ID do usuário extraído das claims do token é consultado no repositório. Isso garante que bloqueios de conta ou alterações de permissões entrem em vigor **imediatamente**.
+3. **Suporte Duplo (Header ou Cookie):** O evento `OnMessageReceived` permite capturar o token enviado no cabeçalho `Authorization: Bearer <token>` ou no cookie HTTP-Only `jwt_token`.
+
+---
+
+## 🎮 Controllers Web API (`[ApiController]`)
+
+### 1. `AccountController.cs` (Registro, Login e Logout)
+Endpoint base: `/api/account`
 
 ```csharp
+namespace fase_01.Controllers;
+
+using fase_01.application.dtos;
+using fase_01.application.interfaces;
+using fase_01.domain.entities;
+using fase_01.domain.interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AccountController : ControllerBase
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IPasswordService _passwordService;
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly JwtSettingsDto _jwtSettings;
+
+    public AccountController(
+        IUserRepository userRepository,
+        IPasswordService passwordService,
+        IJwtTokenService jwtTokenService,
+        IOptions<JwtSettingsDto> jwtSettings)
+    {
+        _userRepository = userRepository;
+        _passwordService = passwordService;
+        _jwtTokenService = jwtTokenService;
+        _jwtSettings = jwtSettings.Value;
+    }
+
+    /// <summary>
+    /// Cadastra um novo usuário e cria a conta associada com hash de senha.
+    /// </summary>
+    [HttpPost("register")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+        if (existingUser != null)
+            return BadRequest(new { message = "Este e-mail já está em uso por outro usuário." });
+
+        var passwordHash = _passwordService.HashPassword(dto.Password);
+
+        var user = new User
+        {
+            FullName = dto.FullName,
+            NickName = dto.NickName,
+            Email = dto.Email,
+            Admin = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _userRepository.CreateWithAccountAsync(user, passwordHash);
+
+        return CreatedAtAction(nameof(Register), new { id = user.Id }, new { user.Id, user.FullName, user.Email });
+    }
+
+    /// <summary>
+    /// Autentica o usuário, valida o hash da senha e gera o token JWT.
+    /// </summary>
+    [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var user = await _userRepository.GetByEmailAsync(dto.Email);
+
+        if (user == null || user.Account == null || !_passwordService.VerifyPassword(dto.Password, user.Account.PasswordHash))
+            return Unauthorized(new { message = "E-mail ou senha inválidos." });
+
+        var token = _jwtTokenService.GenerateToken(user, dto.RememberMe);
+
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = dto.RememberMe
+                ? DateTimeOffset.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationInDays)
+                : DateTimeOffset.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes)
+        };
+        Response.Cookies.Append("jwt_token", token, cookieOptions);
+
+        return Ok(new
+        {
+            token,
+            user = new { user.Id, user.FullName, user.Email, user.NickName, user.Admin }
+        });
+    }
+
+    /// <summary>
+    /// Encerra a sessão removendo o cookie da aplicação.
+    /// </summary>
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("jwt_token");
+        return Ok(new { message = "Logout realizado com sucesso." });
+    }
+}
+```
+
+---
+
+### 2. `GameController.cs` (CRUD de Jogos e Web Scraping Automático de Mídia)
+Endpoint base: `/api/game`
+
+- **Listagem Púbica:** `GET /api/game`
+- **Consulta por ID:** `GET /api/game/{id}` (realiza scraping automático da imagem se `UrlGame` estiver preenchida e a foto ainda não existir)
+- **Criação / Atualização:** `POST /api/game`, `PUT /api/game/{id}` (`[Authorize]`)
+- **Exclusão:** `DELETE /api/game/{id}` (`[Authorize(Roles = "Admin")]`)
+
+```csharp
+namespace fase_01.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using fase_01.domain.interfaces;
 using fase_01.application.interfaces;
 using fase_01.application.mappings;
-using fase_01.domain.enums;
 using fase_01.application.dtos;
+using fase_01.application.services;
+using Microsoft.AspNetCore.Authorization;
 
-namespace fase_01.Controllers;
-
-public class GameController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class GameController : ControllerBase
 {
     private readonly IGameRepository _gameRepository;
     private readonly IPhotoService _photoService;
@@ -74,80 +191,157 @@ public class GameController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> GetAll()
     {
         var entities = await _gameRepository.ListAllAsync();
         var dtos = entities.Select(g => g.ToDto());
-        return View(dtos);
+        return Ok(dtos);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Detail(int id)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id)
     {
         var entity = await _gameRepository.GetByIdAsync(id);
         if (entity == null) return NotFound();
-        return View(entity.ToDto());
-    }
 
-    [HttpGet]
-    public IActionResult Create()
-    {
-        ViewBag.Categories = GameCategory.List();
-        return View(new GameDto());
+        var photo = await _photoService.GetGamePhotoAsync(id);
+        if (photo == null && !string.IsNullOrWhiteSpace(entity.UrlGame))
+        {
+            var downloadedBytes = await PhotoService.ScrapGameImageAsync(entity.UrlGame);
+            if (downloadedBytes != null && downloadedBytes.Length > 0)
+                await _photoService.SaveGamePhotoFromBytesAsync(entity.Id, downloadedBytes, "image/jpeg");
+        }
+
+        return Ok(entity.ToDto());
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(GameDto dto)
+    [Authorize]
+    public async Task<IActionResult> Create([FromForm] GameDto dto)
     {
-        if (ModelState.IsValid)
-        {
-            var entity = dto.ToEntity();
-            await _gameRepository.AddAsync(entity);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-            if (dto.Photo != null && dto.Photo.Length > 0)
-                await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
+        var entity = dto.ToEntity();
+        await _gameRepository.AddAsync(entity);
 
-            return RedirectToAction(nameof(Index));
-        }
+        if (dto.Photo != null && dto.Photo.Length > 0)
+            await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
 
-        ViewBag.Categories = GameCategory.List();
-        return View(dto);
+        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity.ToDto());
     }
 
-    // Endpoints de streaming de fotos em tempo de execução
-    [HttpGet]
-    public async Task<IActionResult> GetPhoto(int id)
+    [HttpPut("{id:int}")]
+    [Authorize]
+    public async Task<IActionResult> Update(int id, [FromForm] GameDto dto)
     {
-        var photo = await _photoService.GetGamePhotoAsync(id);
-        if (photo == null || photo.Image == null || photo.Image.Length == 0)
-            return NotFound();
+        if (id != dto.Id)
+            return BadRequest(new { message = "ID incompatível." });
 
-        return File(photo.Image, photo.ContentType);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var existingEntity = await _gameRepository.GetByIdAsync(id);
+        if (existingEntity == null) return NotFound();
+
+        var entity = dto.ToEntity(existingEntity);
+        await _gameRepository.UpdateAsync(entity);
+
+        if (dto.Photo != null && dto.Photo.Length > 0)
+            await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
+
+        return NoContent();
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetThumbnail(int id)
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var photo = await _photoService.GetGamePhotoAsync(id);
-        if (photo == null || (photo.Thumbnail == null && photo.Image == null))
-            return NotFound();
+        var entity = await _gameRepository.GetByIdAsync(id);
+        if (entity == null) return NotFound();
 
-        var bytes = photo.Thumbnail ?? photo.Image;
-        return File(bytes, photo.ContentType);
+        await _gameRepository.DeleteAsync(id);
+        return NoContent();
     }
 }
 ```
 
 ---
 
-## 🎨 Views Razor e Interface do Usuário
+### 3. `UserController.cs` (Gerenciamento de Usuários e Fotos)
+Endpoint base: `/api/user`
 
-### 1. `_ViewImports.cshtml`
-Garante que todos os arquivos `.cshtml` tenham acesso direto aos DTOs sem repetição de declarações:
+- **Listagem Geral:** `GET /api/user` (`[Authorize(Roles = "Admin")]`)
+- **Detalhes de Usuário:** `GET /api/user/{id}` (`[Authorize]`)
+- **Atualização:** `PUT /api/user/{id}` (`[Authorize(Roles = "Admin")]`)
+- **Exclusão:** `DELETE /api/user/{id}` (`[Authorize(Roles = "Admin")]`)
+- **Mídia / Fotos:** `GET /api/user/{id}/photo`, `GET /api/user/{id}/thumbnail`
 
-```razor
-@using fase_01
+---
+
+## 📖 Documentação Interativa com OpenAPI Nativo & Scalar
+
+Substituindo o antigo Swashbuckle, o projeto adota as bibliotecas oficiais do .NET 10:
+- **`Microsoft.AspNetCore.OpenApi`**: Gera a especificação OpenAPI JSON em `/openapi/v1.json`.
+- **`Scalar.AspNetCore`**: Renderiza a interface de teste interativa moderna em `/scalar/v1`.
+
+### Trecho de Configuração no `Program.cs`:
+```csharp
+// 1. Registrar OpenAPI com suporte a JWT Security Scheme
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Title = "FIAP Cloud Games API",
+            Version = "v1",
+            Description = "API RESTful para gerenciamento de jogos e usuários"
+        };
+
+        var scheme = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Insira o token JWT gerado no endpoint de login"
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes?.Add("Bearer", scheme);
+
+        return Task.CompletedTask;
+    });
+});
+
+var app = builder.Build();
+
+// 2. Habilitar o Endpoint OpenAPI e a UI do Scalar em Desenvolvimento
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "FIAP Cloud Games API - Documentação";
+        options.Theme = ScalarTheme.Purple;
+        options.DefaultHttpClient = new(ScalarTarget.Http, ScalarClient.Http11);
+    });
+}
+```
+
+---
+
+## 🚀 Como Executar e Testar a API
+
+1. Execute o projeto no terminal:
+   ```bash
+   dotnet watch
+   ```
+2. O navegador abrirá automaticamente na interface interativa do Scalar:
+   👉 **`https://localhost:7094/scalar/v1`**
+3. Realize a chamada `POST /api/account/login`, copie a string `token` da resposta e cole na seção **Bearer Auth** do Scalar para autenticar requisições protegidas!
+
 @using fase_01.Models
 @using fase_01.application.dtos
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

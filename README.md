@@ -35,19 +35,26 @@ Segue alguns comandos:
 * __dotnet new list__: lista todos os tipos de projetos instalados
     * __dotnet new list *termo*__: lista todos os tipos de projetos instalados que contenham o *termo* no nome.
 * __dotnet new create *short name*__: cria o projeto.
-    * __dotnet new create mvc__: cria uma projeto do tipo _Aplicativo Web do ASP.NET Core (Model-View-Controller)_.
+    * __dotnet new create webapi__: cria um projeto do tipo _Aplicativo Web API do ASP.NET Core_.
 * __dotnet package search *termo*__: lista todos os pacotes que incluem o *termo* no nome. Se *termo* não for informado retorna tudo.
     * __dotnet package search__: lista todos os pacotes.
     * __dotnet package search Entity__: lista todos os pacotes com o termo 'Entity' no nome
 * __dotnet add package *Package ID*__: adiciona ao projeto o novo pacote
+    * Autenticação via JWT Bearer
+    __dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer__
+    * Suporte a OpenAPI no .NET 10
+    __dotnet add package Microsoft.AspNetCore.OpenApi__
+    * Interface do Scalar para documentação interativa
+    __dotnet add package Scalar.AspNetCore__
     * Pacote principal do EF Core para SQL Server
     __dotnet add package Microsoft.EntityFrameworkCore.SqlServer__
     * Ferramentas de suporte a Migrations no projeto
     __dotnet add package Microsoft.EntityFrameworkCore.Tools__
     * Suporte ao design-time do EF Core (geração de código de migration)
     __dotnet add package Microsoft.EntityFrameworkCore.Design__
-* (CONFIRMAR) __dotnet build__: salva e compila o projeto atual
-* (CONFIRMAR) __dotnet run__: salva, compila e executa o projeto atual
+* __dotnet build__: compila o projeto atual
+* __dotnet run__: compila e executa o projeto
+* __dotnet watch__: executa com recarregamento automático (Hot Reload) e abertura de navegador no Scalar UI (`/scalar/v1`)
 
 ## Migrations
 Depois que as entidades (classes) estão criadas, string de conexão definida no appsettings e o contexto configurado podemos realizar a migração.

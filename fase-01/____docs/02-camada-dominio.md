@@ -20,6 +20,7 @@ A camada de **Domínio (`_01_domain`)** é o coração da aplicação. Ela cont�
 ```
 _01_domain/
 ├── entities/
+│   ├── Account.cs
 │   ├── Game.cs
 │   ├── GamePhoto.cs
 │   ├── PhotoBase.cs
@@ -39,8 +40,8 @@ _01_domain/
 
 ## 🧩 Entidades do Domínio
 
-### 1. `User.cs`
-Representa um usuário do sistema com suporte a perfis de administrador e data de validação de e-mail.
+### 1. `User.cs` e `Account.cs`
+Representam o usuário e sua conta de autenticação/credenciais (relação 1 para 0..1).
 
 ```csharp
 namespace fase_01.domain.entities
@@ -54,6 +55,18 @@ namespace fase_01.domain.entities
         public bool Admin { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ValidatedAt { get; set; }
+
+        public Account? Account { get; set; }
+    }
+
+    public class Account
+    {
+        public int Id { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
+        public bool Approved { get; set; } = false;
+        public int FailedCounter { get; set; } = 0;
+
+        public User User { get; set; } = null!;
     }
 }
 ```
@@ -208,7 +221,13 @@ As interfaces filhas herdam de `IRepositoryBase` passando os tipos concretos:
 
 ```csharp
 public interface IGameRepository : IRepositoryBase<Game, int> { }
-public interface IUserRepository : IRepositoryBase<User, int> { }
+
+public interface IUserRepository : IRepositoryBase<User, int>
+{
+    Task<User?> GetByEmailAsync(string email);
+    Task<User> CreateWithAccountAsync(User user, string passwordHash);
+}
+
 public interface IGamePhotoRepository : IRepositoryBase<GamePhoto, int> { }
 public interface IUserPhotoRepository : IRepositoryBase<UserPhoto, int> { }
 ```
