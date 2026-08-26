@@ -1,6 +1,38 @@
 # fiap-cloud-games
 Projeto do curso "Arquitetura de Sistemas .Net" da FIAP
 
+## TODO
+* implementar testes unitários
+* (_não sei o que é isso_) Aplicar Test-Driven Development (TDD) ou Behavior-Driven Development (BDD) em pelo menos um dos módulos do projeto
+* Domain-Driven Design (DDD): 
+    * Modelar o domínio do projeto utilizando Event Storming para mapear 
+os fluxos de usuários e jogos. 
+    * Seguir os princípios de DDD na organização das entidades e regras 
+de negócio.
+* Entregáveis da Fase 1 
+    * Vídeo de até 15 minutos demonstrando todos os requisitos. Ele pode 
+ser em grupo ou individual (um integrante do grupo grava ou é possível 
+se dividir entre si e apresentar). 
+        * O projeto pode rodar localmente, apresentando os requisitos 
+anteriores. 
+        * Se o requisito técnico estiver com a flag (Opcional), isso significa que caso ele não seja implementado não descontaremos pontos. 
+    * Documentação DDD (Miro ou equivalente), com: 
+        * Event Storming dos fluxos: 
+            * Criação de jogos. 
+            * Criação de usuários. 
+        * Diagramas conforme apresentado na disciplina de DDD. 
+    * Código-fonte no repositório (público ou privado), incluindo: 
+        * APIs conforme requisitos. 
+        * Testes escritos. 
+        * README.md completo com instruções de uso e objetivos. 
+    * Relatório de entrega (PDF ou TXT) – esse arquivo deve ser postado 
+na data da entrega, contendo: 
+        * Nome do grupo. 
+        * Participantes e usernames no Discord. 
+        * Link da documentação. 
+        * Link do(s) repositório(s). 
+        * Link do vídeo salvo no Youtube ou lugar de sua preferência. 
+
 ## Roteiro para Criação do SQL Database
 O SQL Database é o banco de dados no Azure.
 
