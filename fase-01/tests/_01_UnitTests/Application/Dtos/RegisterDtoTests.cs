@@ -1,0 +1,118 @@
+using System.ComponentModel.DataAnnotations;
+using fase_01.application.dtos;
+using FluentAssertions;
+
+namespace fase_01.tests.UnitTests.Application.Dtos
+{
+    public class RegisterDtoTests
+    {
+        /// <summary>
+        /// Para testar as validações via DataAnnotations 
+        /// ([Required], [EmailAddress], [RegularExpression], [Compare], [Url]) e a 
+        /// interface IValidatableObject sem precisar subir controllers, utilizamos 
+        /// a classe auxiliar System.ComponentModel.DataAnnotations.Validator.
+        /// </summary>
+        /// <param name="model">dto que terá as DataAnnotations validadas</param>
+        /// <returns>Listagem com as falhas</returns>
+        private static List<ValidationResult> ValidateModel(object model)
+        {
+            var validationResults = new List<ValidationResult>();
+            var context = new ValidationContext(model, null, null);
+            Validator.TryValidateObject(model, context, validationResults, validateAllProperties: true);
+            return validationResults;
+        }
+
+        [Fact]
+        public void RegisterDto_ShouldBeValid_WhenAllFieldsAreCorrect()
+        {
+            // Arrange
+            var dto = new RegisterDto
+            {
+                FullName = "John Doe",
+                NickName = "johnd",
+                Email = "john.doe@example.com",
+                Password = "Password123!",
+                ConfirmPassword = "Password123!"
+            };
+
+            // Act
+            var results = ValidateModel(dto);
+
+            // Assert
+            results.Should().BeEmpty();
+        }
+
+        [Theory]
+        [InlineData("", "johnd", "john.doe@example.com", "Password123!", "Password123!", "FullName")]
+        [InlineData("John Doe", "johnd", "", "Password123!", "Password123!", "Email")]
+        [InlineData("John Doe", "johnd", "invalid-email-format", "Password123!", "Password123!", "Email")]
+        public void RegisterDto_ShouldFailValidation_WhenRequiredOrEmailFieldsAreInvalid(
+            string fullName,
+            string? nickName,
+            string email,
+            string password,
+            string confirmPassword,
+            string expectedErrorMember
+        )
+        {
+            // Arrange
+            var dto = new RegisterDto
+            {
+                FullName = fullName,
+                NickName = nickName,
+                Email = email,
+                Password = password,
+                ConfirmPassword = confirmPassword
+            };
+
+            // Act
+            var results = ValidateModel(dto);
+
+            // Assert
+            results.Should().Contain(r => r.MemberNames.Contains(expectedErrorMember));
+        }
+
+        [Theory]
+        [InlineData("Short1!")] // menos de 8 caracteres
+        [InlineData("lowercase123!")] // sem letras maiúsculas
+        [InlineData("UPPERCASE123!")] // sem letras minusculas
+        [InlineData("NoNumber!")] // sem números
+        [InlineData("NoSpecialChar123")] // sem caracteres especiais
+        public void RegisterDto_ShouldFailValidation_WhenPasswordDoesNotMeetComplexity(string invalidPassword)
+        {
+            // Arrange
+            var dto = new RegisterDto
+            {
+                FullName = "John Doe",
+                Email = "john.doe@example.com",
+                Password = invalidPassword,
+                ConfirmPassword = invalidPassword
+            };
+
+            // Act
+            var results = ValidateModel(dto);
+
+            // Assert
+            results.Should().Contain(r => r.MemberNames.Contains("Password"));
+        }
+
+        [Fact]
+        public void RegisterDto_ShouldFailValidation_WhenConfirmPasswordDoesNotMatch()
+        {
+            // Arrange
+            var dto = new RegisterDto
+            {
+                FullName = "John Doe",
+                Email = "john.doe@example.com",
+                Password = "Password123!",
+                ConfirmPassword = "DifferentPassword123!"
+            };
+
+            // Act
+            var results = ValidateModel(dto);
+
+            // Assert
+            results.Should().Contain(r => r.MemberNames.Contains("ConfirmPassword"));
+        }
+    }
+}
