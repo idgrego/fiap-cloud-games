@@ -53,71 +53,105 @@ Clique no botão Salvar (Save) na parte superior da tela.
 
 A string de conexão está disponível no formulário de detalhes do banco de dados. Dentro desse formulário procure por "Cadeias de conexão" e escolha a que lhe atende.
 
-## dotnet CLI
-Após instalar o SDK do .NET você terá acesso ao CLI.
+## 🛠️ Guia Rápido de Comandos .NET CLI
 
-Segue alguns comandos:
+Após instalar o SDK do .NET, o CLI estará disponível no seu terminal. Abaixo estão os principais comandos utilizados no ciclo de vida deste projeto:
 
-* __dotnet --info__: detalha quais runtimes, SDKs estão instalados
-* __dotnet --help__: mostra a ajuda
-    * __dotnet new --help__: mostra a ajuda do comando *new*
-    * __dotnet new create --help__: mostra a ajuda do comando *create*
-    * __dotnet add package --help__: mostra a ajuda do comando *add package*
-    * __dotnet package search --help__: mostra a ajuda do comando *package search*
-* __dotnet new list__: lista todos os tipos de projetos instalados
-    * __dotnet new list *termo*__: lista todos os tipos de projetos instalados que contenham o *termo* no nome.
-* __dotnet new create *short name*__: cria o projeto.
-    * __dotnet new create webapi__: cria um projeto do tipo _Aplicativo Web API do ASP.NET Core_.
-* __dotnet package search *termo*__: lista todos os pacotes que incluem o *termo* no nome. Se *termo* não for informado retorna tudo.
-    * __dotnet package search__: lista todos os pacotes.
-    * __dotnet package search Entity__: lista todos os pacotes com o termo 'Entity' no nome
-* __dotnet add package *Package ID*__: adiciona ao projeto o novo pacote
-    * Autenticação via JWT Bearer
-    __dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer__
-    * Suporte a OpenAPI no .NET 10
-    __dotnet add package Microsoft.AspNetCore.OpenApi__
-    * Interface do Scalar para documentação interativa
-    __dotnet add package Scalar.AspNetCore__
-    * Pacote principal do EF Core para SQL Server
-    __dotnet add package Microsoft.EntityFrameworkCore.SqlServer__
-    * Ferramentas de suporte a Migrations no projeto
-    __dotnet add package Microsoft.EntityFrameworkCore.Tools__
-    * Suporte ao design-time do EF Core (geração de código de migration)
-    __dotnet add package Microsoft.EntityFrameworkCore.Design__
-* __dotnet build__: compila o projeto atual
-* __dotnet run__: compila e executa o projeto
-* __dotnet watch__: executa com recarregamento automático (Hot Reload) e abertura de navegador no Scalar UI (`/scalar/v1`)
+### 1. Informações do Ambiente e Ajuda
+* **`dotnet --info`**: Exibe detalhes do ambiente, SDKs e Runtimes instalados.
+* **`dotnet --version`**: Mostra a versão do SDK do .NET em uso no diretório atual.
+* **`dotnet --list-sdks`**: Lista todos os SDKs instalados na máquina.
+* **`dotnet new list`**: Lista todos os templates de projetos disponíveis.
 
-## Migrations
-Depois que as entidades (classes) estão criadas, string de conexão definida no appsettings e o contexto configurado podemos realizar a migração.
+### 2. Criação e Gerenciamento da Solução (.sln) e Projetos (.csproj)
+* **Criar uma nova solução:**
+  ```bash
+  dotnet new sln -n fiap-cloud-games
+  ```
+* **Criar o projeto Web API (Back-end):**
+  ```bash
+  dotnet new webapi -n fase-01 -o fase-01/back-end -f net10.0
+  ```
+* **Criar o projeto de Testes Unitários (xUnit):**
+  ```bash
+  dotnet new xunit -n fase-01.tests -o fase-01/tests
+  ```
+* **Adicionar projetos à solução:**
+  ```bash
+  dotnet sln add fase-01/back-end/fase-01.csproj
+  dotnet sln add fase-01/tests/fase-01.tests.csproj
+  ```
+* **Listar projetos vinculados à solução:**
+  ```bash
+  dotnet sln list
+  ```
+* **Adicionar referência de um projeto em outro (dependência de projeto):**
+  *(Permite que o projeto de testes acesse o projeto back-end)*
+  ```bash
+  dotnet add fase-01/tests/fase-01.tests.csproj reference fase-01/back-end/fase-01.csproj
+  ```
 
-Começe instalando as ferramentas do EF conforme instruções a seguir:
+### 3. Gerenciamento de Pacotes NuGet
+* **Procurar pacotes no repositório NuGet:**
+  ```bash
+  dotnet package search <termo>
+  ```
+* **Adicionar pacotes ao projeto Back-end (`fase-01/back-end`):**
+  ```bash
+  # Autenticação JWT
+  dotnet add fase-01/back-end/fase-01.csproj package Microsoft.AspNetCore.Authentication.JwtBearer
 
-* A instrução a seguir instala a ferramenta do EF Core globalmente
-__dotnet tool install --global dotnet-ef__
-* A instrução a seguir permite atualizar a ferramenta dotnet-ef
-__dotnet tool update --global dotnet-ef__
+  # Documentação OpenAPI e Scalar UI (.NET 10)
+  dotnet add fase-01/back-end/fase-01.csproj package Microsoft.AspNetCore.OpenApi
+  dotnet add fase-01/back-end/fase-01.csproj package Scalar.AspNetCore
 
-Depois, abra o terminal, acesse a pasta fase-01 e rode os seguintes comandos:
+  # Entity Framework Core & SQL Server
+  dotnet add fase-01/back-end/fase-01.csproj package Microsoft.EntityFrameworkCore.SqlServer
+  dotnet add fase-01/back-end/fase-01.csproj package Microsoft.EntityFrameworkCore.Tools
+  dotnet add fase-01/back-end/fase-01.csproj package Microsoft.EntityFrameworkCore.Design
 
-1. Criar a migração inicial
+  # Processamento de Imagens
+  dotnet add fase-01/back-end/fase-01.csproj package SixLabors.ImageSharp
+  ```
+* **Adicionar pacotes ao projeto de Testes (`fase-01/tests`):**
+  ```bash
+  dotnet add fase-01/tests/fase-01.tests.csproj package Moq
+  dotnet add fase-01/tests/fase-01.tests.csproj package FluentAssertions
+  ```
 
-__dotnet ef migrations add InitialCreate -o infrastructure/data/migrations__
+### 4. Compilação, Execução e Testes
+* **`dotnet build`**: Compila todos os projetos da solução sem executá-los.
+* **`dotnet run --project fase-01/back-end/fase-01.csproj`**: Compila e executa o projeto da Web API.
+* **`dotnet watch --project fase-01/back-end/fase-01.csproj`**: Executa a API com recarregamento automático (*Hot Reload*) e abre o navegador automaticamente na documentação do Scalar (`/scalar/v1`).
+* **`dotnet test`**: Executa todas as suítes de testes automatizados do projeto.
+* **`dotnet test --logger "console;verbosity=detailed"`**: Executa os testes exibindo detalhes de cada caso de teste executado no terminal.
 
-2. Excluir a migração
+## 🗄️ EF Core CLI e Migrations
 
-__dotnet ef migrations remove__
+Após definir as entidades no domínio e a string de conexão no `appsettings.json`, gerenciamos a evolução do banco de dados via **Entity Framework Core CLI**.
 
-3. Aplica a migração no SQL Database
+### 1. Instalar/Atualizar a Ferramenta Global do EF Core
+```bash
+# Instalação global do dotnet-ef
+dotnet tool install --global dotnet-ef
 
-__dotnet ef database update__
+# Atualização para a versão mais recente
+dotnet tool update --global dotnet-ef
+```
 
-#########################
+### 2. Comandos para Gerenciar Migrations
+Navegue até o diretório do projeto Web API (`cd fase-01/back-end`) ou execute informando a flag `--project`:
 
-Assinatura: 180387a9-5aa7-4859-a1bc-bb4c7b26ab5e
+* **Criar uma nova migração:**
+  ```bash
+  dotnet ef migrations add InitialCreate -o _02_infrastructure/data/migrations --project fase-01/back-end/fase-01.csproj
+  ```
+* **Aplicar as migrações no banco de dados (Azure SQL / Local):**
+  ```bash
+  dotnet ef database update --project fase-01/back-end/fase-01.csproj
+  ```
+* **Remover a última migração ainda não aplicada:**
+  ```bash
+  dotnet ef migrations remove --project fase-01/back-end/fase-01.csproj
+  ```
 
-server: fcg-server.database.windows.net
-user: fcg-sa
-pwd: f1@p-cluod-gam3s
-
-Server=tcp:fcg-server.database.windows.net,1433;Initial Catalog=fcg-db;Persist Security Info=False;User ID=fcg-sa;Password={your_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
