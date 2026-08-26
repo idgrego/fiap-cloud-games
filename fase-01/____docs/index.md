@@ -32,6 +32,10 @@ Abaixo estão os módulos documentados em ordem cronológica de desenvolvimento.
    - Autenticação e Autorização via JWT Bearer Token (`[Authorize]`, `[Authorize(Roles = "Admin")]`).
    - Documentação Interativa com OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`) e Scalar UI (`Scalar.AspNetCore`).
    - Endpoints de streaming de mídia e respostas padronizadas em JSON.
+6. **Suíte de Testes Automatizados (`fase-01/tests`)**
+   - Testes unitários com **xUnit**, **Moq** e **FluentAssertions**.
+   - Organização estruturada (`UnitTests` e `IntegrationTests`).
+   - Cobertura de validações de DTOs, regras de complexidade de senhas, serviços e controladores.
 
 ---
 
@@ -56,6 +60,7 @@ graph TD
 - **Banco de Dados:** Azure SQL Database / SQL Server Express
 - **Documentação de API:** OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`) + Scalar API Reference (`Scalar.AspNetCore`)
 - **Processamento de Imagens:** `SixLabors.ImageSharp` (versão 4.x)
+- **Testes Automatizados:** xUnit 2.9, Moq 4.20, FluentAssertions 8.10
 
 ---
 
@@ -86,10 +91,12 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-### 4. Compilar e Rodar
+### 4. Compilar, Rodar e Testar
 ```bash
-dotnet run
-# ou para recarregamento automático e abertura do navegador:
-dotnet watch
+# Compilar e rodar a API (com Hot Reload)
+dotnet watch --project fase-01/back-end/fase-01.csproj
+
+# Executar suíte de testes unitários com output detalhado dos métodos
+dotnet test --logger "console;verbosity=detailed"
 ```
 Acesse a documentação interativa do **Scalar** em `https://localhost:7094/scalar/v1` (ou porta configurada) no seu navegador.

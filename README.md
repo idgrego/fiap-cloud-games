@@ -123,8 +123,11 @@ Após instalar o SDK do .NET, o CLI estará disponível no seu terminal. Abaixo 
 * **`dotnet build`**: Compila todos os projetos da solução sem executá-los.
 * **`dotnet run --project fase-01/back-end/fase-01.csproj`**: Compila e executa o projeto da Web API.
 * **`dotnet watch --project fase-01/back-end/fase-01.csproj`**: Executa a API com recarregamento automático (*Hot Reload*) e abre o navegador automaticamente na documentação do Scalar (`/scalar/v1`).
-* **`dotnet test`**: Executa todas as suítes de testes automatizados do projeto.
-* **`dotnet test --logger "console;verbosity=detailed"`**: Executa os testes exibindo detalhes de cada caso de teste executado no terminal.
+* **`dotnet test`**: Executa todas as suítes de testes automatizados do projeto (modo resumido).
+* **`dotnet test --logger "console;verbosity=detailed"`**: Executa os testes detalhando o nome de cada método de teste, resultado individual e tempo de execução no terminal.
+* **`dotnet test --logger "console;verbosity=normal"`**: Exibe o status e o nome de cada teste de forma intermediária.
+* **`dotnet test --filter "FullyQualifiedName~RegisterDtoTests"`**: Executa apenas a classe ou método de teste especificado no filtro.
+* **`dotnet test --logger "trx"`**: Executa os testes e gera um relatório em arquivo `.trx` na pasta `TestResults/`.
 
 ## 🗄️ EF Core CLI e Migrations
 
