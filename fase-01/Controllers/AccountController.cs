@@ -106,7 +106,11 @@ public class AccountController : ControllerBase
         // 2. Criar o usuário
         var entity = dto.ToEntity();
         // garante que o 1o usuário seja o administrador do sistema
-        entity.Admin = !await this._userRepository.hasAnyUser();
+        if (!await this._userRepository.hasAnyUser())
+        {
+            entity.Admin = true;
+            entity.ValidatedAt = DateTime.UtcNow;
+        }
 
         // 3. Criptografar a senha (gera o Hash seguro)
         var passwordHash = _passwordService.HashPassword(dto.Password!, entity);
@@ -124,5 +128,11 @@ public class AccountController : ControllerBase
     }
 
     #endregion
+
+    [HttpGet("test-error")]
+    public IActionResult TestError()
+    {
+        throw new InvalidOperationException("Teste de exceção não tratada capturada pelo Middleware!");
+    }
 
 }

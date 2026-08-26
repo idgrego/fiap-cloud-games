@@ -245,6 +245,9 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build();
 
+// 🔴 REGISTRAR O MIDDLEWARE NO TOPO DO PIPELINE (antes de routing, auth e controllers)
+app.UseMiddleware<fase_01.application.middlewares.ExceptionHandlingMiddleware>();
+
 // 2. Habilitar o endpoint do OpenAPI e a Interface do Scalar no ambiente de Desenvolvimento
 if (app.Environment.IsDevelopment())
 {
