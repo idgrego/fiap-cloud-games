@@ -123,7 +123,7 @@ public class GameController : ControllerBase
 
     #region photos
 
-    [HttpGet]
+    [HttpGet("photo/{id:int}")]
     public async Task<IActionResult> GetPhoto(int id)
     {
         var photo = await _photoService.GetGamePhotoAsync(id);
@@ -133,7 +133,7 @@ public class GameController : ControllerBase
         return File(photo.Image, photo.ContentType);
     }
 
-    [HttpGet]
+    [HttpGet("thumbnail/{id:int}")]
     public async Task<IActionResult> GetThumbnail(int id)
     {
         var photo = await _photoService.GetGamePhotoAsync(id);
