@@ -10,8 +10,10 @@ namespace fase_01.infrastructure.data
         }
 
         public DbSet<User> Users => Set<User>();
-        public DbSet<Game> Games => Set<Game>();
+        public DbSet<Account> Accounts => Set<Account>();
         public DbSet<UserPhoto> UserPhotos => Set<UserPhoto>();
+
+        public DbSet<Game> Games => Set<Game>();
         public DbSet<GamePhoto> GamePhotos => Set<GamePhoto>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -19,15 +19,22 @@ namespace fase_01.infrastructure.repositories
         /// <returns>The created user.</returns>
         public async Task<User> RegisterAsync(User entity, string hashedPassword)
         {
+            // 1. salva para gerar o ID
+            await _context.Users.AddAsync(entity);
+            await _context.SaveChangesAsync();
+
+            // 2. associa a account com o ID já gerado
             entity.Account = new Account
             {
+                Id = entity.Id,
                 PasswordHash = hashedPassword,
                 Approved = true,
                 FailedCounter = 0,
             };
 
-            await _context.Users.AddAsync(entity);
+            await _context.Accounts.AddAsync(entity.Account);
             await _context.SaveChangesAsync();
+
 
             return entity;
         }
