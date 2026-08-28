@@ -1,6 +1,6 @@
 # Tutoriais e Guia de Execução
 
-Este documento reúne roteiros de configuração de ambiente, comandos úteis da CLI do .NET e orientações para gerenciamento de banco de dados e migrações do Entity Framework Core.
+Este documento reúne roteiros de configuração de ambiente, comandos úteis da CLI do .NET, orientações para gerenciamento de banco de dados e migrações do Entity Framework Core, além de um guia prático para uso de diagramas e Event Storming com Mermaid.
 
 ---
 
@@ -9,6 +9,7 @@ Este documento reúne roteiros de configuração de ambiente, comandos úteis da
 1. [Roteiro para Criação do SQL Database](#roteiro-para-criação-do-sql-database)
 2. [Guia Rápido de Comandos .NET CLI](#️-guia-rápido-de-comandos-net-cli)
 3. [EF Core CLI e Migrations](#-ef-core-cli-e-migrations)
+4. [Uso de Mermaid para Diagramas e Event Storming](#-uso-de-mermaid-para-diagramas-e-event-storming)
 
 ---
 
@@ -140,3 +141,149 @@ Navegue até o diretório do projeto Web API (`cd fase-01/back-end`) ou execute 
   ```bash
   dotnet ef migrations remove --project fase-01/back-end/fase-01.csproj
   ```
+
+---
+
+## 🧜‍♂️ Uso de Mermaid para Diagramas e Event Storming
+
+O **Mermaid** é uma ferramenta baseada em Markdown para geração dinâmica de diagramas e gráficos. Toda a documentação deste repositório foi projetada para ser renderizada e visualizada diretamente via **Obsidian**, **VS Code** ou **GitHub**.
+
+📖 Para consultar a documentação completa, todos os tipos de diagramas e recursos avançados, acesse a **[Documentação Oficial do Mermaid](https://mermaid.js.org/)**.
+
+---
+
+### 1. Estrutura Básica
+
+Para criar um diagrama Mermaid em um arquivo Markdown, utilize um bloco de código cercado por três crases com o identificador `mermaid`:
+
+````markdown
+```mermaid
+graph TD
+    A[Início] --> B[Processo]
+    B --> C[(Banco de Dados)]
+```
+````
+
+#### 📖 Entendendo a Sintaxe:
+
+- **Tipos de Diagramas no Mermaid**:
+  - `graph` e `flowchart`: Ambos constroem **fluxogramas / grafos**. A diferença principal é que o `flowchart` é a versão mais moderna e flexível no Mermaid, suportando conexões mais complexas, estilizações avançadas de subgrafos, links interativos e curvas de linhas aprimoradas.
+  - `sequenceDiagram`: Utilizado para **diagramas de sequência** (troca de mensagens ordenada ao longo do tempo entre participantes/serviços).
+  - `classDiagram`: Utilizado para **diagramas de classe** (UML), mostrando propriedades, métodos, herança e associações de PHO/POCO.
+  - `erDiagram`: Utilizado para **diagramas de entidade-relacionamento (DER)** de banco de dados.
+  - `stateDiagram-v2`: Utilizado para **diagramas de máquinas de estado**.
+  - `gantt`: Utilizado para cronogramas e gráficos de planejamento de projetos.
+
+- **Orientação do Grafo (`graph TD` ou `flowchart LR`)**: Define a direção do fluxo visual.
+  - `TD` ou `TB` (*Top-Down* / *Top-Bottom*): De cima para baixo.
+  - `LR` (*Left-Right*): Da esquerda para a direita.
+  - `BT` (*Bottom-Top*): De baixo para cima.
+  - `RL` (*Right-Left*): Da direita para a esquerda.
+
+- **Identificadores de Nós (`A`, `B`, `C`)**: São os IDs únicos dos elementos no código. Servem para criar conexões sem repetir o nome do nó.
+
+- **Formatos de Nós (Símbolos e Conectores)**:
+  - **Colchetes `[Texto]`**: Cria um retângulo padrão com texto dentro (ex: `A[Início]`).
+  - **Parênteses `(Texto)`**: Cria um retângulo de bordas arredondadas.
+  - **Cilindro com Parênteses e Colchetes `[(Texto)]`**: Representa um banco de dados / armazenamento de dados (ex: `C[(Banco de Dados)]`).
+  - **Chaves `{Texto}`**: Representa um nó de decisão (losango).
+  - **Parênteses duplos `((Texto))`**: Cria um nó circular.
+
+- **Seta de Conexão e Linhas**:
+  - `-->`: Seta sólida padrão.
+  - `---`: Linha sem seta.
+  - `-.->`: Seta pontilhada/tracejada.
+  - `==>`: Seta destacada (linha grossa).
+  - `-- Texto -->`: Seta com rótulo descritivo na conexão.
+
+#### 📊 Resultado Visual Gerado:
+
+```mermaid
+graph TD
+    A[Início] --> B[Processo]
+    B --> C[(Banco de Dados)]
+```
+
+---
+
+### 2. Event Storming com Mermaid (Padrão DDD)
+
+No Domain-Driven Design (DDD), o **Event Storming** utiliza post-its coloridos para mapear eventos de domínio, comandos e agregados. Podemos simular essas cores com estilos CSS (`classDef`) no Mermaid:
+
+- 🟧 **Domain Event** (Laranja): Eventos passados relevantes para o negócio (`#ffe0b2`).
+- 🟦 **Command** (Azul): Intenção ou ação iniciada por usuário/sistema (`#bbdefb`).
+- 🟨 **Aggregate / Entity** (Amarelo): Entidade que garante as regras de negócio (`#fff9c4`).
+- 👤 **Actor / User** (Cinza): Papel que dispara o comando (`#eceff1`).
+
+#### Exemplo de Código Mermaid:
+
+````markdown
+```mermaid
+flowchart LR
+    %% Definição de Cores do Event Storming
+    classDef actor fill:#eceff1,stroke:#455a64,color:#102a43,stroke-width:2px;
+    classDef command fill:#bbdefb,stroke:#1e88e5,color:#0d47a1,stroke-width:2px;
+    classDef aggregate fill:#fff9c4,stroke:#fbc02d,color:#f57f17,stroke-width:2px;
+    classDef event fill:#ffe0b2,stroke:#fb8c00,color:#e65100,stroke-width:2px;
+
+    %% Fluxo de Criação de Jogo
+    Admin[👤 Admin]:::actor --> C1["[Command] CreateGame"]:::command
+    C1 --> A1["[Aggregate] Game"]:::aggregate
+    A1 --> E1["[Event] GameCreated"]:::event
+```
+````
+
+#### 📊 Resultado Visual Gerado:
+
+```mermaid
+flowchart LR
+    %% Definição de Cores do Event Storming
+    classDef actor fill:#eceff1,stroke:#455a64,color:#102a43,stroke-width:2px;
+    classDef command fill:#bbdefb,stroke:#1e88e5,color:#0d47a1,stroke-width:2px;
+    classDef aggregate fill:#fff9c4,stroke:#fbc02d,color:#f57f17,stroke-width:2px;
+    classDef event fill:#ffe0b2,stroke:#fb8c00,color:#e65100,stroke-width:2px;
+
+    %% Fluxo de Criação de Jogo
+    Admin[👤 Admin]:::actor --> C1["[Command] CreateGame"]:::command
+    C1 --> A1["[Aggregate] Game"]:::aggregate
+    A1 --> E1["[Event] GameCreated"]:::event
+```
+
+---
+
+### 3. Diagrama de Contexto (Context Map)
+
+O **Mapa de Contexto** mapeia os *Bounded Contexts* (Contextos Delimitados) e o relacionamento entre eles (ex: *Upstream/Downstream*, *Customer-Supplier*):
+
+````markdown
+```mermaid
+graph TD
+    subgraph Boundary_Auth ["🔐 Bounded Context: Autenticação"]
+        UserAggregate[User & Account Aggregate]
+    end
+
+    subgraph Boundary_Catalog ["🎮 Bounded Context: Catálogo de Jogos"]
+        GameAggregate[Game Aggregate]
+    end
+
+    Boundary_Auth -- "Fornece Tokens/Claims (Upstream)" --> Boundary_Catalog
+    Boundary_Catalog -- "Consome Validação JWT (Downstream)" --> Boundary_Auth
+```
+````
+
+#### 📊 Resultado Visual Gerado:
+
+```mermaid
+graph TD
+    subgraph Boundary_Auth ["🔐 Bounded Context: Autenticação"]
+        UserAggregate[User & Account Aggregate]
+    end
+
+    subgraph Boundary_Catalog ["🎮 Bounded Context: Catálogo de Jogos"]
+        GameAggregate[Game Aggregate]
+    end
+
+    Boundary_Auth -- "Fornece Tokens/Claims (Upstream)" --> Boundary_Catalog
+    Boundary_Catalog -- "Consome Validação JWT (Downstream)" --> Boundary_Auth
+```
+
