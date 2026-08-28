@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using fase_01.domain.interfaces;
 using fase_01.application.interfaces;
 using fase_01.application.mappings;
-using fase_01.domain.enums;
 using fase_01.application.dtos;
 using fase_01.application.services;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 
 namespace fase_01.Controllers;

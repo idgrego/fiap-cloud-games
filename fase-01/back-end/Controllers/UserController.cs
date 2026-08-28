@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using fase_01.domain.interfaces;
-using fase_01.domain.entities;
 using fase_01.application.interfaces;
 using fase_01.application.dtos;
 using fase_01.application.mappings;
