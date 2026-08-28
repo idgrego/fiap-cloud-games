@@ -110,8 +110,8 @@ Após instalar o SDK do .NET, o CLI estará disponível no seu terminal. Abaixo 
   dotnet add fase-01/back-end/fase-01.csproj package Microsoft.EntityFrameworkCore.Tools
   dotnet add fase-01/back-end/fase-01.csproj package Microsoft.EntityFrameworkCore.Design
 
-  # Processamento de Imagens
-  dotnet add fase-01/back-end/fase-01.csproj package SixLabors.ImageSharp
+  # Processamento de Imagens (Nativo)
+  dotnet add fase-01/back-end/fase-01.csproj package System.Drawing.Common
   ```
 * **Adicionar pacotes ao projeto de Testes (`fase-01/tests`):**
   ```bash

@@ -306,16 +306,17 @@ namespace fase_01.application.mappings
 
 ## 🖼️ Processamento de Imagens e Miniaturas (`PhotoService.cs`)
 
-O serviço `PhotoService` utiliza a biblioteca **`SixLabors.ImageSharp`** para processar uploads de arquivos `IFormFile`, gerando e redimensionando miniaturas de 150x150 pixels mantendo a proporção de aspecto.
+O serviço `PhotoService` utiliza as APIs nativas do **`System.Drawing.Common`** (`Bitmap`, `Graphics`) para processar uploads de arquivos `IFormFile`, gerando e redimensionando miniaturas de 150x150 pixels mantendo a proporção de aspecto.
 
 ```csharp
 namespace fase_01.application.services
 {
+    using System.Drawing;
+    using System.Drawing.Drawing2D;
+    using System.Drawing.Imaging;
     using fase_01.application.interfaces;
     using fase_01.domain.entities;
     using fase_01.domain.interfaces;
-    using SixLabors.ImageSharp;
-    using SixLabors.ImageSharp.Processing;
 
     public class PhotoService : IPhotoService
     {
@@ -344,22 +345,41 @@ namespace fase_01.application.services
             await _gamePhotoRepository.UpSertAsync(gamePhoto);
         }
 
-        // Processa e redimensiona a miniatura com o ImageSharp
-        private async Task<byte[]> GenerateThumbnailAsync(IFormFile file, int width = 150, int height = 150)
+        // Processa e redimensiona a miniatura com System.Drawing em alta qualidade
+#pragma warning disable CA1416
+        private static async Task<byte[]> GenerateThumbnailAsync(IFormFile file, int width = 150, int height = 150)
         {
             using var inputStream = file.OpenReadStream();
-            using var image = await Image.LoadAsync(inputStream);
+            using var originalBitmap = new Bitmap(inputStream);
 
-            image.Mutate(x => x.Resize(new ResizeOptions
-            {
-                Size = new Size(width, height),
-                Mode = ResizeMode.Max
-            }));
+            float ratioX = (float)width / originalBitmap.Width;
+            float ratioY = (float)height / originalBitmap.Height;
+            float ratio = Math.Min(ratioX, ratioY);
+
+            int newWidth = (int)(originalBitmap.Width * ratio);
+            int newHeight = (int)(originalBitmap.Height * ratio);
+
+            using var thumbnailBitmap = new Bitmap(newWidth, newHeight);
+            using var graphics = Graphics.FromImage(thumbnailBitmap);
+
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+
+            graphics.DrawImage(originalBitmap, 0, 0, newWidth, newHeight);
 
             using var outputStream = new MemoryStream();
-            await image.SaveAsync(outputStream, image.Metadata.DecodedImageFormat!);
-            return outputStream.ToArray();
+            var imageFormat = file.ContentType.ToLower() switch
+            {
+                "image/png" => ImageFormat.Png,
+                "image/gif" => ImageFormat.Gif,
+                _ => ImageFormat.Jpeg
+            };
+
+            thumbnailBitmap.Save(outputStream, imageFormat);
+            return await Task.FromResult(outputStream.ToArray());
         }
+#pragma warning restore CA1416
 
         private async Task<byte[]> ConvertToBytesAsync(IFormFile file)
         {
@@ -369,6 +389,7 @@ namespace fase_01.application.services
         }
     }
 }
+```
 ```
 
 ---

@@ -26,7 +26,7 @@ Abaixo estão os módulos documentados em ordem cronológica de desenvolvimento.
    - DTOs (Data Transfer Objects), `RegisterDto`, `LoginDto` e `JwtSettingsDto`.
    - Mapeamento bidirecional via Métodos de Extensão C# (`ToDto` e `ToEntity`).
    - Serviços de Autenticação e Segurança (`IPasswordService`, `IJwtTokenService`).
-   - Serviço de Processamento de Imagens e Miniaturas com SixLabors.ImageSharp (`PhotoService`).
+   - Serviço de Processamento de Imagens e Miniaturas com `System.Drawing.Common` (`PhotoService`).
 5. [[05-camada-apresentacao|05. Camada de Apresentação (Presentation Layer - Web API)]]
    - Controllers RESTful (`AccountController`, `GameController`, `UserController`).
    - Autenticação e Autorização via JWT Bearer Token (`[Authorize]`, `[Authorize(Roles = "Admin")]`).
@@ -59,7 +59,7 @@ graph TD
 - **ORM:** Entity Framework Core 10 (SQL Server Provider)
 - **Banco de Dados:** Azure SQL Database / SQL Server Express
 - **Documentação de API:** OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`) + Scalar API Reference (`Scalar.AspNetCore`)
-- **Processamento de Imagens:** `SixLabors.ImageSharp` (versão 4.x)
+- **Processamento de Imagens:** `System.Drawing.Common`
 - **Testes Automatizados:** xUnit 2.9, Moq 4.20, FluentAssertions 8.10
 
 ---
@@ -81,7 +81,7 @@ dotnet add package Microsoft.AspNetCore.OpenApi
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 dotnet add package Microsoft.EntityFrameworkCore.Tools
 dotnet add package Scalar.AspNetCore
-dotnet add package SixLabors.ImageSharp
+dotnet add package System.Drawing.Common
 ```
 
 ### 3. Executar Migrations e Atualizar o Banco
