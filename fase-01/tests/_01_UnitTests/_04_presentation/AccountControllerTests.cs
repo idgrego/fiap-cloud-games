@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Moq;
 
-namespace fase_01.tests.UnitTests.presentation.controllers
+namespace fase_01.tests.UnitTests.presentation
 {
     public class AccountControllerTests
     {
