@@ -10,6 +10,9 @@ Bem-vindo à documentação técnica do projeto **FIAP Cloud Games (Fase 1)**. E
 
 Abaixo estão os módulos documentados em ordem cronológica de desenvolvimento. Siga este fluxo para entender ou reproduzir o projeto do zero:
 
+0. [[00-modelagem-ddd-event-storming|00. Modelagem DDD (Event Storming & Diagrama de Contexto)]]
+   - Event Storming dos fluxos de criação e autenticação de usuários e cadastro de jogos em Mermaid.
+   - Diagrama de Contexto (*Context Map*) detalhando os Bounded Contexts da aplicação.
 1. [[01-scripts-banco-dados|01. Scripts e Estrutura de Banco de Dados]]
    - Criação de tabelas relacionais em SQL Server / Azure SQL (`Users`, `Accounts`, `UsersPhotos`, `Games`, `EnumGamesCategories`, `GamesPhotos`).
    - Script de carga e povoamento inicial de jogos (*seed data*).

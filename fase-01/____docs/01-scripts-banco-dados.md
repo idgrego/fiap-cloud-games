@@ -2,7 +2,7 @@
 
 #sqlserver #azuresql #database #ddl #dml
 
-Voltar para a [[index|Visão Geral]].
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[00-modelagem-ddd-event-storming|00. Modelagem DDD]] | Ver próximo: [[02-camada-dominio|02. Camada de Domínio]]
 
 ---
 

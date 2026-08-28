@@ -10,6 +10,8 @@ Voltar para a [[index|Visão Geral]] | Ver anterior: [[01-scripts-banco-dados|01
 
 A camada de **Domínio (`_01_domain`)** é o coração da aplicação. Ela contém as regras de negócio puras, entidades de domínio, os valores de domínio (como os *Smart Enums*) e as interfaces de contrato dos repositórios.
 
+Para visualizar os diagramas comportamentais e o mapa de contextos delimitados deste domínio, consulte a documentação de **[[00-modelagem-ddd-event-storming|Modelagem DDD (Event Storming & Diagrama de Contexto)]]**.
+
 > [!IMPORTANT] Princípio Arquitetural
 > A camada de Domínio **não possui nenhuma dependência** com frameworks de infraestrutura (como Entity Framework Core ou ASP.NET Core). Ela define *o que* o sistema faz através de interfaces C#, deixando para a camada de Infraestrutura a implementação de *como* o dado é persistido.
 
