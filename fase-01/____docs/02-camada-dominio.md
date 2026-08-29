@@ -2,7 +2,7 @@
 
 #domain #csharp #smartenum #entities #repository-pattern
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]]
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]] | Próximo passo: [[03-camada-infraestrutura|03. Camada de Infraestrutura]]
 
 ---
 
@@ -12,8 +12,8 @@ A camada de **Domínio (`_01_domain`)** é o coração da aplicação. Ela cont�
 
 Para visualizar os diagramas comportamentais e o mapa de contextos delimitados deste domínio, consulte a documentação de **[[00-modelagem-ddd-event-storming|Modelagem DDD (Event Storming & Diagrama de Contexto)]]**.
 
-> [!IMPORTANT] Princípio Arquitetural
-> A camada de Domínio **não possui nenhuma dependência** com frameworks de infraestrutura (como Entity Framework Core ou ASP.NET Core). Ela define *o que* o sistema faz através de interfaces C#, deixando para a camada de Infraestrutura a implementação de *como* o dado é persistido.
+> Princípio Arquitetural: 
+> A camada de Domínio **não possui nenhuma dependência** com frameworks de infraestrutura (como Entity Framework Core ou ASP.NET Core). Ela define *o que* o sistema faz através de interfaces, deixando para a camada de Infraestrutura a implementação de *como* o dado é persistido.
 
 ---
 
@@ -236,4 +236,4 @@ public interface IUserPhotoRepository : IRepositoryBase<UserPhoto, int> { }
 
 ---
 
-Próximo passo: [[03-camada-infraestrutura|03. Camada de Infraestrutura]]
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]] | Próximo passo: [[03-camada-infraestrutura|03. Camada de Infraestrutura]]

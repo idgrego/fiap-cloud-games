@@ -10,27 +10,27 @@ Bem-vindo à documentação técnica do projeto **FIAP Cloud Games (Fase 1)**. E
 
 Abaixo estão os módulos documentados em ordem cronológica de desenvolvimento. Siga este fluxo para entender ou reproduzir o projeto do zero:
 
-0. [[00-modelagem-ddd-event-storming|00. Modelagem DDD (Event Storming & Diagrama de Contexto)]]
+0. [[00-modelagem-ddd-event-storming|Modelagem DDD (Event Storming & Diagrama de Contexto)]]
    - Event Storming dos fluxos de criação e autenticação de usuários e cadastro de jogos em Mermaid.
    - Diagrama de Contexto (*Context Map*) detalhando os Bounded Contexts da aplicação.
-1. [[01-scripts-banco-dados|01. Scripts e Estrutura de Banco de Dados]]
+1. [[01-scripts-banco-dados|Scripts e Estrutura de Banco de Dados]]
    - Criação de tabelas relacionais em SQL Server / Azure SQL (`Users`, `Accounts`, `UsersPhotos`, `Games`, `EnumGamesCategories`, `GamesPhotos`).
    - Script de carga e povoamento inicial de jogos (*seed data*).
-2. [[02-camada-dominio|02. Camada de Domínio (Domain Layer)]]
+2. [[02-camada-dominio|Camada de Domínio (Domain Layer)]]
    - Entidades de Domínio (`Game`, `User`, `Account`, `GamePhoto`, `UserPhoto`).
    - Padrão *Smart Enum* para Categorias (`GameCategory`).
    - Contratos e Interfaces de Repositório (`IRepositoryBase`, `IGameRepository`, `IUserRepository`, etc.).
-3. [[03-camada-infraestrutura|03. Camada de Infraestrutura (Infrastructure Layer)]]
+3. [[03-camada-infraestrutura|Camada de Infraestrutura (Infrastructure Layer)]]
    - Configuração do Entity Framework Core (`AppDbContext`).
    - Mapeamento Fluent API, Check Constraints e Cascading Deletes.
    - Implementação do Padrão *Repository* Genérico e Específico (`UserRepository` com autenticação).
    - Migrations do EF Core e Resiliência com Azure SQL (`EnableRetryOnFailure`).
-4. [[04-camada-aplicacao|04. Camada de Aplicação (Application Layer)]]
+4. [[04-camada-aplicacao|Camada de Aplicação (Application Layer)]]
    - DTOs (Data Transfer Objects), `RegisterDto`, `LoginDto` e `JwtSettingsDto`.
    - Mapeamento bidirecional via Métodos de Extensão C# (`ToDto` e `ToEntity`).
    - Serviços de Autenticação e Segurança (`IPasswordService`, `IJwtTokenService`).
    - Serviço de Processamento de Imagens e Miniaturas com `System.Drawing.Common` (`PhotoService`).
-5. [[05-camada-apresentacao|05. Camada de Apresentação (Presentation Layer - Web API)]]
+5. [[05-camada-apresentacao|Camada de Apresentação (Presentation Layer - Web API)]]
    - Controllers RESTful (`AccountController`, `GameController`, `UserController`).
    - Autenticação e Autorização via JWT Bearer Token (`[Authorize]`, `[Authorize(Roles = "Admin")]`).
    - Documentação Interativa com OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`) e Scalar UI (`Scalar.AspNetCore`).
@@ -88,7 +88,7 @@ dotnet add package System.Drawing.Common
 ```
 
 ### 3. Executar Migrations e Atualizar o Banco
-Ganta que a connection string `DefaultConnection` e o bloco `JwtSettings` estão configurados no `appsettings.json`.
+Garanta que a connection string `DefaultConnection` e o bloco `JwtSettings` estejam configurados no `appsettings.json`.
 ```bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update

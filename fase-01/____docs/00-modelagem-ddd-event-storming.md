@@ -46,24 +46,24 @@ flowchart LR
     UserSystem[👤 Usuário Cadastrado]:::actor
 
     %% Sub-fluxo 1: Registro
-    Visitor --> C_Register["[Command] RegisterUser"]:::command
-    C_Register --> A_User["[Aggregate] User / Account"]:::aggregate
-    A_User --> E_UserCreated["[Event] UserRegistered"]:::event
-    E_UserCreated --> C_Hash["[Command] HashPassword"]:::command
-    C_Hash --> E_PasswordHashed["[Event] PasswordHashedAndSaved"]:::event
+    Visitor --> C_Register["[Comando] Registrar usuário"]:::command
+    C_Register --> A_User["[Agregação] Usuário / Conta"]:::aggregate
+    A_User --> E_UserCreated["[Evento] Usuário registrado"]:::event
+    E_UserCreated --> C_Hash["[Comando] Gerar hash da senha"]:::command
+    C_Hash --> E_PasswordHashed["[Evento] Hash gerado e salvo (Conta)"]:::event
 
     %% Sub-fluxo 2: Login e Autenticação
-    UserSystem --> C_Login["[Command] AuthenticateUser"]:::command
-    C_Login --> A_Account["[Aggregate] Account"]:::aggregate
-    A_Account --> E_Auth["[Event] UserAuthenticated"]:::event
-    E_Auth --> C_Jwt["[Command] GenerateJwtToken"]:::command
-    C_Jwt --> E_TokenIssued["[Event] JwtTokenIssued"]:::event
+    UserSystem --> C_Login["[Comando] Autenticar"]:::command
+    C_Login --> A_Account["[Agregação] Usuário / Conta"]:::aggregate
+    A_Account --> E_Auth["[Evento] Usuário autenticado"]:::event
+    E_Auth --> C_Jwt["[Comando] Token JWT gerado"]:::command
+    C_Jwt --> E_TokenIssued["[Evento] Token JWT emitido"]:::event
 ```
 
 #### 📌 Detalhamento dos Componentes do Fluxo:
-- **Comandos**: `RegisterUser` (Solicita cadastro com nome, nickname, e-mail e senha), `AuthenticateUser` (Solicita login com e-mail e senha).
-- **Agregados**: `User` e `Account` garantem a unicidade do e-mail, formato válido e integridade do hash PBKDF2/HMAC-SHA512.
-- **Eventos de Domínio**: `UserRegistered`, `PasswordHashedAndSaved`, `UserAuthenticated`, `JwtTokenIssued`.
+- **Comandos**: `Registrar usuário` (Solicita cadastro com nome, nickname, e-mail e senha), `Autenticar` (Solicita login com e-mail e senha).
+- **Agregados**: `Usuário` e `Conta` garantem, respectivamente, a unicidade do e-mail com formato válido e integridade do hash PBKDF2/HMAC-SHA512.
+- **Eventos de Domínio**: `Usuário registrado`, `Hash gerado e salvo (Conta)`, `Usuário autenticado`, `Token JWT emitido`.
 
 ---
 
@@ -83,19 +83,19 @@ flowchart LR
     Admin[👤 Administrador]:::actor
 
     %% Fluxo de Cadastro e Mídia de Jogos
-    Admin --> C_CreateGame["[Command] CreateGame"]:::command
-    C_CreateGame --> A_Game["[Aggregate] Game / SmartEnum Category"]:::aggregate
-    A_Game --> E_GameCreated["[Event] GameCreated"]:::event
+    Admin --> C_CreateGame["[Comando] Criar jogo"]:::command
+    C_CreateGame --> A_Game["[Agregado] Jogo / Categoria"]:::aggregate
+    A_Game --> E_GameCreated["[Evento] Jogo criado"]:::event
 
-    E_GameCreated --> C_UploadPhoto["[Command] UploadGamePhoto"]:::command
-    C_UploadPhoto --> A_Photo["[Aggregate] GamePhoto / PhotoService"]:::aggregate
-    A_Photo --> E_PhotoProcessed["[Event] PhotoResizedAndSaved"]:::event
+    E_GameCreated --> C_UploadPhoto["[Comando] Upload da foto do jogo"]:::command
+    C_UploadPhoto --> A_Photo["[Agregado] Foto do jogo / PhotoService"]:::aggregate
+    A_Photo --> E_PhotoProcessed["[Evento] Thumbnail gerado e foto salva"]:::event
 ```
 
 #### 📌 Detalhamento dos Componentes do Fluxo:
-- **Comandos**: `CreateGame` (Informa título, fabricante, descrição, modo online/multiplayer e categoria), `UploadGamePhoto` (Envia arquivo de imagem de capa).
-- **Agregados**: `Game` (valida obrigatoriedade de campos e conversão da categoria via `GameCategory` Smart Enum) e `GamePhoto` (processa e armazena imagem e miniatura).
-- **Eventos de Domínio**: `GameCreated`, `PhotoResizedAndSaved`.
+- **Comandos**: `Criar jogo` (Informa título, fabricante, descrição, modo online/multiplayer e categoria), `Upload da foto do jogo` (Envia arquivo de imagem de capa).
+- **Agregados**: `Jogo` (valida obrigatoriedade de campos e conversão da categoria) e `Foto do jogo` (processa e armazena imagem e miniatura).
+- **Eventos de Domínio**: `Jogo criado`, `Thumbnail gerado e foto salva`.
 
 ---
 
@@ -107,24 +107,24 @@ O **Mapa de Contexto** estabelece os limites explícitos de cada **Bounded Conte
 graph TD
     subgraph Boundary_Auth ["🔐 Bounded Context: Autenticação e Identidade"]
         direction TB
-        UserAgg[User & Account Aggregates]
-        JwtSvc[IJwtTokenService]
-        PassSvc[IPasswordService]
+        UserAgg[Agregação do usuário e conta]
+        JwtSvc[Serviço JWT: gera o token, valida e extrai os dados]
+        PassSvc[Serviço de senha: gera o hash e valida a senha]
     end
 
     subgraph Boundary_Catalog ["🎮 Bounded Context: Catálogo de Jogos"]
         direction TB
-        GameAgg[Game Aggregate & SmartEnum Category]
-        PhotoSvc[IPhotoService & GamePhoto]
+        GameAgg[Agregação do jogo, categoria e foto do jogo]
+        PhotoSvc[Serviço de foto: gera o thumbnail (miniatura)]
     end
 
     subgraph Infrastructure ["☁️ Infraestrutura & Persistência"]
-        AppDb[(AppDbContext / Azure SQL Database)]
+        AppDb[(Contexto para o Azure SQL Database)]
     end
 
-    %% Relacionamentos de Contexto (Upstream / Downstream)
-    Boundary_Auth -- "Fornece Tokens & Claims de Autorização [Upstream / OHs]" --> Boundary_Catalog
-    Boundary_Catalog -- "Consome Identidade & Validação de Role Admin [Downstream / PL]" --> Boundary_Auth
+    %% Relacionamentos de Contexto (Envio / Recebimento)
+    Boundary_Auth -- "Fornece Tokens & Claims de Autorização [Envia]" --> Boundary_Catalog
+    Boundary_Catalog -- "Consome Identidade & Validação de Role Admin [Recebe]" --> Boundary_Auth
 
     Boundary_Auth --> AppDb
     Boundary_Catalog --> AppDb
@@ -133,12 +133,19 @@ graph TD
 ### 📖 Padrões de Relacionamento Entre os Contextos:
 
 1. **Contexto de Autenticação e Identidade (`Boundary_Auth`)**:
-   - Actua como **Upstream (U)** e fornece um serviço de protocolo aberto (*Open Host Service / OHS*) baseado em **JWT Tokens**.
-   - Responsável pelo ciclo de vida do usuário, segurança de credenciais e emissão das *claims* (ex: `Role = Admin`).
+   - Localiza o usuário pelo e-mail e valida a senha com o hash armazenado
+   - Fornece o token JWT.
+   - Responsável pelo ciclo de vida do usuário, segurança de credenciais e emissão das *claims* (ex: `Id = <código do usuário no banco>`).
 
 2. **Contexto de Catálogo de Jogos (`Boundary_Catalog`)**:
-   - Atua como **Downstream (D)** através de uma *Conformist / Published Language (PL)*, consumindo os tokens JWT emitidos para proteger endpoints de escrita (cadastros e uploads de foto).
-   - Mantém autonomia nas regras de negócio de jogos e categorias, dependendo da autenticação apenas para autorização de acesso.
+   - Fornece dados e as respectivas fotos dos jogos cadastrados.
+   - Garante proteção para manipulação dos dados através do JWT. Este contém o ID do usuário e assim é possível identificar se é ou não um administrador do sistema.
+   - Apenas administradores podem realizar manipulação dos dados e da foto.
 
 3. **Camada de Persistência Compartilhada (`Infrastructure`)**:
-   - Mapeada via Entity Framework Core (`AppDbContext`), isolando os modelos relacionais das regras de negócio ricas do domínio.
+   - Mapeada via Entity Framework Core, isolando os modelos relacionais das regras de negócio ricas do domínio.
+
+---
+
+Voltar para a [[index|Visão Geral]] | Ver próximo: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]]
+

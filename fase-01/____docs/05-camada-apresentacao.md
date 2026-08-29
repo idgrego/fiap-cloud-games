@@ -8,7 +8,7 @@ Voltar para a [[index|Visão Geral]] | Ver anterior: [[04-camada-aplicacao|04. C
 
 ## 🎯 Objetivo
 
-A camada de **Apresentação** é a interface HTTP do sistema. A aplicação foi convertida para uma **Web API RESTful desacoplada**, pronta para ser consumida por qualquer cliente front-end (React, Angular, Vue, Mobile ou aplicações desktop).
+A camada de **Apresentação** é a interface HTTP do sistema. Trata-se de aplicação **Web API RESTful**, pronta para ser consumida por qualquer cliente front-end (React, Angular, Vue, Mobile ou aplicações desktop).
 
 A API expõe dados e ações no formato **JSON**, gerencia autenticação e autorização via **JWT Bearer Tokens** e fornece documentação interativa moderna através de **OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`)** e **Scalar UI (`Scalar.AspNetCore`)**.
 
@@ -437,4 +437,4 @@ builder.Services.AddControllersWithViews();
 
 ---
 
-Voltar para a [[index|Visão Geral]]
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[04-camada-aplicacao|04. Camada de Aplicação]]

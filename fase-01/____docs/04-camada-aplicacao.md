@@ -2,7 +2,7 @@
 
 #application #dtos #validation #extension-methods #imagesharp #csharp
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[03-camada-infraestrutura|03. Camada de Infraestrutura]]
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[03-camada-infraestrutura|03. Camada de Infraestrutura]] | Próximo passo: [[05-camada-apresentacao|05. Camada de Apresentação]]
 
 ---
 
@@ -390,8 +390,5 @@ namespace fase_01.application.services
     }
 }
 ```
-```
 
----
-
-Próximo passo: [[05-camada-apresentacao|05. Camada de Apresentação]]
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[03-camada-infraestrutura|03. Camada de Infraestrutura]] | Próximo passo: [[05-camada-apresentacao|05. Camada de Apresentação]]

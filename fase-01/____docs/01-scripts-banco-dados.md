@@ -10,6 +10,9 @@ Voltar para a [[index|Visão Geral]] | Ver anterior: [[00-modelagem-ddd-event-st
 
 Esta etapa documenta a modelagem relacional das tabelas de banco de dados do **FIAP Cloud Games**, os relacionamentos de chave primária/estrangeira, regras de integridade e os scripts SQL DDL/DML utilizados para provisionamento inicial.
 
+> Todo o processo de criação e atualização da estrutura do banco de dados foi feito através das Migrations.
+> O script serviu como um suporte para melhor entendimento das entidades.
+
 ---
 
 ## 📂 Localização dos Scripts no Projeto
@@ -53,10 +56,6 @@ CREATE TABLE UsersPhotos (
 );
 ```
 
-> [!NOTE] Destaque de Modelagem: Tabela de Credenciais (`Accounts`) e Fotos (`UsersPhotos`)
-> Tanto a chave primária `id` em `Accounts` quanto em `UsersPhotos` são Chaves Estrangeiras apontando para `Users(id)`. Isso garante a cardinalidade **1 para 0..1** (um usuário possui no máximo uma conta com hash de senha e no máximo uma foto de perfil). O `ON DELETE CASCADE` garante a exclusão automática de credenciais e mídia ao remover um usuário.
-
----
 
 ### 2. Tabela de Jogos (`Games`, `EnumGamesCategories` e `GamesPhotos`)
 
@@ -122,4 +121,5 @@ VALUES
 
 ---
 
-Próximo passo: [[02-camada-dominio|02. Camada de Domínio]]
+Voltar para a [[index|Visão Geral]] | Ver anterior: [[00-modelagem-ddd-event-storming|00. Modelagem DDD]] | Ver próximo: [[02-camada-dominio|02. Camada de Domínio]]
+

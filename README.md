@@ -60,11 +60,15 @@ Os roteiros de criação de banco de dados, guias da CLI do .NET e comandos do E
 ## 📋 Tarefas e Entregáveis (TODO)
 
 ### Objetivos do Projeto
-* [ ] Implementar testes unitários
-* [ ] Aplicar Test-Driven Development (TDD) ou Behavior-Driven Development (BDD) em pelo menos um dos módulos do projeto
-* [ ] **Domain-Driven Design (DDD):**
+
+* [X] **Domain-Driven Design (DDD):**
     * Modelar o domínio do projeto utilizando Event Storming para mapear os fluxos de usuários e jogos.
     * Seguir os princípios de DDD na organização das entidades e regras de negócio.
+* [X] Implementar as entidades
+* [X] Implementar o módulo de interface com o banco de dados
+* [X] Implementar o módulo da aplicação
+* [X] Implementar testes unitários
+* [X] Aplicar Test-Driven Development (TDD) ou Behavior-Driven Development (BDD) em pelo menos um dos módulos do projeto
 
 ### Entregáveis da Fase 1
 * **Vídeo demonstrativo (até 15 minutos):** Apresentando todos os requisitos (em grupo ou individual).
