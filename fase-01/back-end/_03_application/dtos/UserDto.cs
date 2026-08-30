@@ -24,12 +24,23 @@ namespace fase_01.application.dtos
         [Display(Name = "Admin")]
         public bool Admin { get; set; }
 
+        /// <summary>
+        /// Permite receber a imagem pelo JSON em formato base64 para realização do upsert da foto do usuário
+        /// </summary>
         [Display(Name = "Photo")]
-        public IFormFile? Photo { get; set; }
+        public string? PhotoBase64 { get; set; }
 
+        /// <summary>
+        /// Informa quando o usuário foi criado no sistema (autoregistro)
+        /// </summary>
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; }
 
+        /// <summary>
+        /// Informa quando o usuário foi validado.
+        /// Ao realizar o autoregistro o usuário receberá um e-mail com um link.
+        /// Ao clicar no link irá comprovar/validar o endereço de e-mail do usuário.
+        /// </summary>
         [Display(Name = "Validated At")]
         public DateTime? ValidatedAt { get; set; }
 

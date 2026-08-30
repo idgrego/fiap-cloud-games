@@ -45,8 +45,11 @@ namespace fase_01.application.dtos
         [MaxLength(255, ErrorMessage = "The field {0} must be a maximum length of {1}")]
         public string? UrlVideo { get; set; }
 
+        /// <summary>
+        /// Permite receber a imagem pelo JSON em formato base64 para realização do upsert da foto do jogo
+        /// </summary>
         [Display(Name = "Cover / Image")]
-        public IFormFile? Photo { get; set; }
+        public string? PhotoBase64 { get; set; }
 
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; }

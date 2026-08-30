@@ -119,8 +119,8 @@ public class AccountController : ControllerBase
         await _userRepository.RegisterAsync(entity, passwordHash);
 
         // 5. Salvar a foto do usuário, se houver
-        if (dto.Photo != null && dto.Photo.Length > 0)
-            await _photoService.SaveUserPhotoAsync(entity.Id, dto.Photo);
+        if (!string.IsNullOrWhiteSpace(dto.PhotoBase64))
+            await _photoService.SaveUserPhotoAsync(entity.Id, dto.PhotoBase64);
 
         // 6. Devolve o resultado
         return CreatedAtAction(nameof(Register), new { id = entity.Id }, entity.ToDto());

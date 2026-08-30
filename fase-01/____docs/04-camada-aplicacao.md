@@ -40,13 +40,12 @@ _03_application/
 ## 📦 DTOs e Validação Cruzada (`IValidatableObject`)
 
 ### 1. `GameDto.cs`
-Transporta os dados de formulário do jogo, incluindo a propriedade `IFormFile? Photo` para envio de arquivos de imagem via requisições `multipart/form-data`.
+Transporta os dados do jogo via requisições `application/json` (`[FromBody]`), incluindo a propriedade `PhotoBase64` em formato de string codificada em Base64.
 
 ```csharp
 namespace fase_01.application.dtos
 {
     using System.ComponentModel.DataAnnotations;
-    using Microsoft.AspNetCore.Http;
 
     public class GameDto
     {
@@ -78,14 +77,16 @@ namespace fase_01.application.dtos
         [Url(ErrorMessage = "Invalid URL format.")]
         public string? UrlVideo { get; set; }
 
-        public IFormFile? Photo { get; set; }
+        [Display(Name = "Photo")]
+        public string? PhotoBase64 { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }
 ```
 
 ### 2. `UserDto.cs` com Validação de Múltiplas Propriedades
-O `UserDto` implementa a interface `IValidatableObject` do ASP.NET Core para garantir a regra de negócio onde a data de validação (`ValidatedAt`) não pode ser anterior à data de criação do usuário (`CreatedAt`):
+O `UserDto` transporta os dados de usuário via JSON (`[FromBody]`) com suporte a foto em Base64 (`PhotoBase64`) e implementa a interface `IValidatableObject` do ASP.NET Core para garantir que a data de validação (`ValidatedAt`) não seja anterior à data de criação (`CreatedAt`):
 
 ```csharp
 namespace fase_01.application.dtos
@@ -98,7 +99,10 @@ namespace fase_01.application.dtos
 
         [Display(Name = "Fullname")]
         [Required(ErrorMessage = "The field {0} is required")]
-        public string Fullname { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+
+        [Display(Name = "Nickname")]
+        public string? NickName { get; set; }
 
         [Display(Name = "Email")]
         [Required(ErrorMessage = "The field {0} is required")]
@@ -106,7 +110,10 @@ namespace fase_01.application.dtos
         public string Email { get; set; } = string.Empty;
 
         public bool Admin { get; set; }
-        public IFormFile? Photo { get; set; }
+
+        [Display(Name = "Photo")]
+        public string? PhotoBase64 { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public DateTime? ValidatedAt { get; set; }
 
@@ -130,7 +137,7 @@ namespace fase_01.application.dtos
 ```csharp
 public class RegisterDto
 {
-    [Required(ErrorMessage = "O nome completo é obrigatório.")]
+    [Required(ErrorMessage = "The field Fullname is required")]
     public string FullName { get; set; } = string.Empty;
 
     public string? NickName { get; set; }
@@ -138,11 +145,13 @@ public class RegisterDto
     [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [Required, StringLength(100, MinimumLength = 6)]
+    [Required]
     public string Password { get; set; } = string.Empty;
 
     [Required, Compare("Password")]
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    public string? PhotoBase64 { get; set; }
 }
 
 public class LoginDto
@@ -304,16 +313,13 @@ namespace fase_01.application.mappings
 
 ---
 
-## 🖼️ Processamento de Imagens e Miniaturas (`PhotoService.cs`)
+## 🖼️ Processamento de Imagens, Base64 e Miniaturas (`PhotoService.cs`)
 
-O serviço `PhotoService` utiliza as APIs nativas do **`System.Drawing.Common`** (`Bitmap`, `Graphics`) para processar uploads de arquivos `IFormFile`, gerando e redimensionando miniaturas de 150x150 pixels mantendo a proporção de aspecto.
+O serviço `PhotoService` é responsável por receber imagens codificadas em **Base64** (Data URI scheme `data:image/...;base64,...` ou Base64 puro) via requisições `application/json` (`[FromBody]`), converter os dados para `byte[]`, extrair o `ContentType`, gerar miniaturas de 150x150 pixels mantendo a proporção com **`System.Drawing.Common`**, e fornecer suporte a **exclusão de fotos** de jogos e usuários.
 
 ```csharp
 namespace fase_01.application.services
 {
-    using System.Drawing;
-    using System.Drawing.Drawing2D;
-    using System.Drawing.Imaging;
     using fase_01.application.interfaces;
     using fase_01.domain.entities;
     using fase_01.domain.interfaces;
@@ -323,41 +329,85 @@ namespace fase_01.application.services
         private readonly IGamePhotoRepository _gamePhotoRepository;
         private readonly IUserPhotoRepository _userPhotoRepository;
 
-        public PhotoService(IGamePhotoRepository gamePhotoRepository, IUserPhotoRepository userPhotoRepository)
+        public PhotoService(
+            IGamePhotoRepository gamePhotoRepository,
+            IUserPhotoRepository userPhotoRepository)
         {
             _gamePhotoRepository = gamePhotoRepository;
             _userPhotoRepository = userPhotoRepository;
         }
 
-        public async Task SaveGamePhotoAsync(int gameId, IFormFile file)
+        #region user's photo
+
+        public async Task SaveUserPhotoAsync(int userId, string? photoBase64)
         {
-            var imageBytes = await ConvertToBytesAsync(file);
-            var thumbnailBytes = await GenerateThumbnailAsync(file);
+            if (string.IsNullOrWhiteSpace(photoBase64))
+                return;
+
+            var parsedImage = this.ParseBase64Image(photoBase64);
+            var thumbnailBytes = await GenerateThumbnailFromBytesAsync(parsedImage.bytes, parsedImage.contentType);
+
+            var userPhoto = new UserPhoto
+            {
+                Id = userId,
+                ContentType = parsedImage.contentType,
+                Image = parsedImage.bytes,
+                Thumbnail = thumbnailBytes
+            };
+
+            await _userPhotoRepository.UpSertAsync(userPhoto);
+        }
+
+        public async Task DeleteUserPhotoAsync(int userId)
+        {
+            await _userPhotoRepository.DeleteAsync(userId);
+        }
+
+        #endregion
+
+        #region game's photo
+
+        public async Task SaveGamePhotoAsync(int gameId, string? photoBase64)
+        {
+            if (string.IsNullOrWhiteSpace(photoBase64))
+                return;
+
+            var parsedImage = this.ParseBase64Image(photoBase64);
+            var thumbnailBytes = await GenerateThumbnailFromBytesAsync(parsedImage.bytes, parsedImage.contentType);
 
             var gamePhoto = new GamePhoto
             {
                 Id = gameId,
-                ContentType = file.ContentType,
-                Image = imageBytes,
+                ContentType = parsedImage.contentType,
+                Image = parsedImage.bytes,
                 Thumbnail = thumbnailBytes
             };
 
             await _gamePhotoRepository.UpSertAsync(gamePhoto);
         }
 
-        // Processa e redimensiona a miniatura com System.Drawing em alta qualidade
-#pragma warning disable CA1416
-        private static async Task<byte[]> GenerateThumbnailAsync(IFormFile file, int width = 150, int height = 150)
+        public async Task DeleteGamePhotoAsync(int gameId)
         {
-            using var inputStream = file.OpenReadStream();
-            using var originalBitmap = new Bitmap(inputStream);
+            await _gamePhotoRepository.DeleteAsync(gameId);
+        }
 
-            float ratioX = (float)width / originalBitmap.Width;
-            float ratioY = (float)height / originalBitmap.Height;
-            float ratio = Math.Min(ratioX, ratioY);
+        #endregion
 
-            int newWidth = (int)(originalBitmap.Width * ratio);
-            int newHeight = (int)(originalBitmap.Height * ratio);
+        private (byte[] bytes, string contentType) ParseBase64Image(string base64String)
+        {
+            if (base64String.Contains(";base64,"))
+            {
+                var parts = base64String.Split(";base64,");
+                var contentType = parts[0].Replace("data:", "");
+                var bytes = Convert.FromBase64String(parts[1]);
+                return (bytes, contentType);
+            }
+
+            return (Convert.FromBase64String(base64String), "image/jpeg");
+        }
+    }
+}
+```
 
             using var thumbnailBitmap = new Bitmap(newWidth, newHeight);
             using var graphics = Graphics.FromImage(thumbnailBitmap);

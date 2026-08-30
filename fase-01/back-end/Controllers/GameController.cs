@@ -5,6 +5,7 @@ using fase_01.application.mappings;
 using fase_01.application.dtos;
 using fase_01.application.services;
 using Microsoft.AspNetCore.Authorization;
+using fase_01.domain.entities;
 
 namespace fase_01.Controllers;
 
@@ -39,14 +40,11 @@ public class GameController : ControllerBase
         var entity = await _gameRepository.GetByIdAsync(id);
         if (entity == null) return NotFound();
 
-        // Verifica se a foto já existe no banco
-        var photo = await _photoService.GetGamePhotoAsync(id);
-        // Se NÃO existir foto e houver uma URL de jogo configurada, faz o scraping automático
-        if (photo == null && !string.IsNullOrWhiteSpace(entity.UrlGame))
+        if (entity.Photo == null && !string.IsNullOrWhiteSpace(entity.UrlGame))
         {
-            var downloadedBytes = await PhotoService.ScrapGameImageAsync(entity.UrlGame);
-            if (downloadedBytes != null && downloadedBytes.Length > 0)
-                await _photoService.SaveGamePhotoFromBytesAsync(entity.Id, downloadedBytes, "image/jpeg");
+            // Se NÃO existir foto e houver uma URL de jogo configurada, faz o scraping automático
+            GamePhoto? newGamePhoto = await PhotoService.ScrapGameImageAsync(id, entity.UrlGame);
+            if (newGamePhoto != null) await _photoService.SaveGamePhotoAsync(newGamePhoto);
         }
 
         return Ok(entity.ToDto());
@@ -59,21 +57,16 @@ public class GameController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<GameDto>(StatusCodes.Status201Created)]
-    public async Task<IActionResult> Create([FromForm] GameDto dto)
+    public async Task<IActionResult> Create([FromBody] GameDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var entity = dto.ToEntity();
         await _gameRepository.AddAsync(entity);
-
-        if (dto.Photo != null && dto.Photo.Length > 0)
-            await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
+        await _photoService.SaveGamePhotoAsync(entity.Id, dto.PhotoBase64);
 
         return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity.ToDto());
-
-
-        //ViewBag.Categories = GameCategory.List().Select(i => new SelectListItem(i.Name, i.Code.ToString(), i.Code == dto.CategoryId)).ToList();
     }
 
     #endregion
@@ -86,9 +79,9 @@ public class GameController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Update(int id, [FromForm] GameDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] GameDto dto)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var existingEntity = await _gameRepository.GetByIdAsync(dto.Id);
@@ -96,9 +89,7 @@ public class GameController : ControllerBase
 
         var entity = dto.ToEntity(existingEntity);
         await _gameRepository.UpdateAsync(entity);
-
-        if (dto.Photo != null && dto.Photo.Length > 0)
-            await _photoService.SaveGamePhotoAsync(entity.Id, dto.Photo);
+        await _photoService.SaveGamePhotoAsync(entity.Id, dto.PhotoBase64);
 
         return NoContent();
     }
@@ -139,7 +130,18 @@ public class GameController : ControllerBase
             return NotFound();
 
         var bytes = photo.Thumbnail ?? photo.Image;
-        return File(bytes, photo.ContentType);
+        return File(bytes, "image/jpeg"); // thumbnail está sendo salvo como jpeg
+    }
+
+    [HttpDelete("photo/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> DeletePhoto(int id)
+    {
+        await _photoService.DeleteGamePhotoAsync(id);
+        return NoContent();
     }
 
     #endregion

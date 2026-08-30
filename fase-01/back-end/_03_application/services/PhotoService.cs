@@ -18,39 +18,23 @@ namespace fase_01.application.services
             _userPhotoRepository = userPhotoRepository;
         }
 
-        public async Task SaveGamePhotoAsync(int gameId, IFormFile file)
+        #region user's photo
+        public async Task SaveUserPhotoAsync(int userId, string? photoBase64)
         {
-            var imageBytes = await ConvertToBytesAsync(file);
-            var thumbnailBytes = await GenerateThumbnailAsync(file);
-            var gamePhoto = new GamePhoto
-            {
-                Id = gameId,
-                ContentType = file.ContentType,
-                Image = imageBytes,
-                Thumbnail = thumbnailBytes
-            };
+            if (string.IsNullOrWhiteSpace(photoBase64))
+                return;
 
-            await _gamePhotoRepository.UpSertAsync(gamePhoto);
-        }
+            var parsedImage = this.ParseBase64Image(photoBase64);
 
-        public async Task SaveUserPhotoAsync(int userId, IFormFile file)
-        {
-            var imageBytes = await ConvertToBytesAsync(file);
-            var thumbnailBytes = await GenerateThumbnailAsync(file);
             var userPhoto = new UserPhoto
             {
                 Id = userId,
-                ContentType = file.ContentType,
-                Image = imageBytes,
-                Thumbnail = thumbnailBytes
+                ContentType = parsedImage.contentType,
+                Image = parsedImage.bytes,
+                Thumbnail = await GenerateThumbnailAsync(parsedImage.bytes)
             };
 
             await _userPhotoRepository.UpSertAsync(userPhoto);
-        }
-
-        public async Task<GamePhoto?> GetGamePhotoAsync(int gameId)
-        {
-            return await _gamePhotoRepository.GetByIdAsync(gameId);
         }
 
         public async Task<UserPhoto?> GetUserPhotoAsync(int userId)
@@ -58,69 +42,70 @@ namespace fase_01.application.services
             return await _userPhotoRepository.GetByIdAsync(userId);
         }
 
-        public async Task<byte[]?> GetGamePhotoBytesAsync(int gameId)
+        public async Task DeleteUserPhotoAsync(int userId)
         {
-            var gamePhoto = await _gamePhotoRepository.GetByIdAsync(gameId);
-            return gamePhoto?.Image;
+            await _userPhotoRepository.DeleteAsync(userId);
         }
 
-        public async Task<byte[]?> GetUserPhotoBytesAsync(int userId)
+        #endregion
+
+        #region game's photo
+        public async Task SaveGamePhotoAsync(GamePhoto gamePhoto)
         {
-            var userPhoto = await _userPhotoRepository.GetByIdAsync(userId);
-            return userPhoto?.Image;
+            if (gamePhoto == null) return;
+            await _gamePhotoRepository.UpSertAsync(gamePhoto);
         }
-
-        // Gera a miniatura mantendo a proporção ou recortando proporcionalmente
-#pragma warning disable CA1416 // Valida a compatibilidade da plataforma
-
-        private static async Task<byte[]> GenerateThumbnailAsync(IFormFile file, int width = 150, int height = 150)
+        public async Task SaveGamePhotoAsync(int gameId, string? photoBase64)
         {
-            using var inputStream = file.OpenReadStream();
-            using var originalBitmap = new System.Drawing.Bitmap(inputStream);
+            if (string.IsNullOrWhiteSpace(photoBase64))
+                return;
 
-            // Calcula as proporções para manter o aspect ratio da imagem
-            float ratioX = (float)width / originalBitmap.Width;
-            float ratioY = (float)height / originalBitmap.Height;
-            float ratio = Math.Min(ratioX, ratioY);
+            var parsedImage = this.ParseBase64Image(photoBase64);
 
-            int newWidth = (int)(originalBitmap.Width * ratio);
-            int newHeight = (int)(originalBitmap.Height * ratio);
-
-            // Cria o novo Bitmap para a miniatura redimensionada
-            using var thumbnailBitmap = new System.Drawing.Bitmap(newWidth, newHeight);
-            using var graphics = System.Drawing.Graphics.FromImage(thumbnailBitmap);
-
-            // Configura alta qualidade para a interpolação do redimensionamento
-            graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-
-            graphics.DrawImage(originalBitmap, 0, 0, newWidth, newHeight);
-
-            using var outputStream = new MemoryStream();
-
-            // Define o formato de saída baseado na extensão do arquivo (padrão JPEG)
-            var imageFormat = file.ContentType.ToLower() switch
+            var gamePhoto = new GamePhoto
             {
-                "image/png" => System.Drawing.Imaging.ImageFormat.Png,
-                "image/gif" => System.Drawing.Imaging.ImageFormat.Gif,
-                _ => System.Drawing.Imaging.ImageFormat.Jpeg
+                Id = gameId,
+                ContentType = parsedImage.contentType,
+                Image = parsedImage.bytes,
+                Thumbnail = await GenerateThumbnailAsync(parsedImage.bytes)
             };
 
-            thumbnailBitmap.Save(outputStream, imageFormat);
-            return await Task.FromResult(outputStream.ToArray());
+            await this.SaveGamePhotoAsync(gamePhoto);
         }
 
-#pragma warning restore CA1416
-
-        private async Task<byte[]> ConvertToBytesAsync(IFormFile file)
+        public async Task<GamePhoto?> GetGamePhotoAsync(int gameId)
         {
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            return memoryStream.ToArray();
+            return await _gamePhotoRepository.GetByIdAsync(gameId);
         }
 
-        public static async Task<byte[]?> ScrapGameImageAsync(string urlGame)
+        public async Task DeleteGamePhotoAsync(int gameId)
+        {
+            await _gamePhotoRepository.DeleteAsync(gameId);
+        }
+
+        #endregion
+
+
+        private (byte[] bytes, string contentType) ParseBase64Image(string base64String)
+        {
+            if (base64String.Contains(";base64,"))
+            {
+                // Exemplo de string: "data:image/png;base64,iVBORw0KGgoAAAAN..."
+                var parts = base64String.Split(";base64,");
+
+                // Extrai o Content-Type: "image/png"
+                var contentType = parts[0].Replace("data:", "");
+
+                // Converte a parte dos dados em byte[]
+                var imgBytes = Convert.FromBase64String(parts[1]);
+
+                return (imgBytes, contentType);
+            }
+
+            return (Convert.FromBase64String(base64String), "image/jpeg");
+        }
+
+        public static async Task<GamePhoto?> ScrapGameImageAsync(int gameId, string urlGame)
         {
 
             // implementando pela IA
@@ -156,7 +141,17 @@ namespace fase_01.application.services
 
                     // 3. Baixa os bytes da imagem encontrada
                     var imageBytes = await client.GetByteArrayAsync(imageUrl);
-                    return imageBytes;
+
+                    var gamePhoto = new GamePhoto
+                    {
+                        Id = gameId,
+                        ContentType = GetContentTypeFromBytes(imageBytes, "image/jpeg"),
+                        Image = imageBytes,
+                        Thumbnail = await GenerateThumbnailAsync(imageBytes)
+                    };
+
+                    return gamePhoto;
+
                 }
             }
             catch
@@ -167,22 +162,40 @@ namespace fase_01.application.services
             return null;
         }
 
+        private static string GetContentTypeFromBytes(byte[] bytes, string defaultContentType = "application/octet-stream")
+        {
+            if (bytes.Length >= 4 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47)
+                return "image/png";
+
+            if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8)
+                return "image/jpeg";
+
+            if (bytes.Length >= 4 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46)
+                return "image/gif";
+
+            return defaultContentType; // Tipo padrão caso não identifique
+        }
+
 #pragma warning disable CA1416
-        public async Task SaveGamePhotoFromBytesAsync(int gameId, byte[] imageBytes, string contentType = "image/jpeg")
+
+        private static async Task<byte[]> GenerateThumbnailAsync(byte[] imageBytes, int width = 150, int height = 150)
         {
             using var inputStream = new MemoryStream(imageBytes);
             using var originalBitmap = new System.Drawing.Bitmap(inputStream);
 
-            float ratioX = 150f / originalBitmap.Width;
-            float ratioY = 150f / originalBitmap.Height;
+            // Calcula as proporções para manter o aspect ratio da imagem
+            float ratioX = (float)width / originalBitmap.Width;
+            float ratioY = (float)height / originalBitmap.Height;
             float ratio = Math.Min(ratioX, ratioY);
 
             int newWidth = (int)(originalBitmap.Width * ratio);
             int newHeight = (int)(originalBitmap.Height * ratio);
 
+            // Cria o novo Bitmap para a miniatura redimensionada
             using var thumbnailBitmap = new System.Drawing.Bitmap(newWidth, newHeight);
             using var graphics = System.Drawing.Graphics.FromImage(thumbnailBitmap);
 
+            // Configura alta qualidade para a interpolação do redimensionamento
             graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
             graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
@@ -192,16 +205,10 @@ namespace fase_01.application.services
             using var outputStream = new MemoryStream();
             thumbnailBitmap.Save(outputStream, System.Drawing.Imaging.ImageFormat.Jpeg);
 
-            var gamePhoto = new GamePhoto
-            {
-                Id = gameId,
-                ContentType = contentType,
-                Image = imageBytes,
-                Thumbnail = outputStream.ToArray()
-            };
-
-            await _gamePhotoRepository.UpSertAsync(gamePhoto);
+            return await Task.FromResult(outputStream.ToArray());
         }
+
+
 #pragma warning restore CA1416
 
     }

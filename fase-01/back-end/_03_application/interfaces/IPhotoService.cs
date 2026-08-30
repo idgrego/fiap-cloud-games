@@ -4,13 +4,15 @@ namespace fase_01.application.interfaces
 {
     public interface IPhotoService
     {
-        Task<byte[]?> GetGamePhotoBytesAsync(int gameId);
+        // game's photo
         Task<GamePhoto?> GetGamePhotoAsync(int gameId);
-        Task SaveGamePhotoAsync(int gameId, IFormFile file);
-        Task SaveGamePhotoFromBytesAsync(int gameId, byte[] imageBytes, string contentType);
+        Task DeleteGamePhotoAsync(int gameId);
+        Task SaveGamePhotoAsync(int gameId, string? photoBase64);
+        Task SaveGamePhotoAsync(GamePhoto gamePhoto);
 
-        Task<byte[]?> GetUserPhotoBytesAsync(int userId);
+        // user's photo
         Task<UserPhoto?> GetUserPhotoAsync(int userId);
-        Task SaveUserPhotoAsync(int userId, IFormFile file);
+        Task DeleteUserPhotoAsync(int userId);
+        Task SaveUserPhotoAsync(int userId, string? photoBase64);
     }
 }

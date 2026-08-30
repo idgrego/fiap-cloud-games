@@ -133,9 +133,12 @@ graph TD
 ### 📖 Padrões de Relacionamento Entre os Contextos:
 
 1. **Contexto de Autenticação e Identidade (`Boundary_Auth`)**:
-   - Localiza o usuário pelo e-mail e valida a senha com o hash armazenado
-   - Fornece o token JWT.
-   - Responsável pelo ciclo de vida do usuário, segurança de credenciais e emissão das *claims* (ex: `Id = <código do usuário no banco>`).
+   - Localiza o usuário pelo e-mail e valida a senha com o hash armazenado.
+   - Fornece o token JWT e gerencia permissões e roles (`Admin` / `User`).
+   - Responsável pelo ciclo de vida do usuário, segurança de credenciais e emissão das *claims* (ex: `NameIdentifier` = ID do usuário).
+   - **Regras de Governança de Usuários:**
+     - *Consulta Individual:* Acesso restrito ao próprio usuário autenticado ou a administradores.
+     - *Proteção de Administrador:* Impede a desativação da permissão de admin ou autoexclusão caso o usuário conectado seja o **único administrador** cadastrado no sistema.
 
 2. **Contexto de Catálogo de Jogos (`Boundary_Catalog`)**:
    - Fornece dados e as respectivas fotos dos jogos cadastrados.

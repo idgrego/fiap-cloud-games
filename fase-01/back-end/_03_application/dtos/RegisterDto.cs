@@ -45,7 +45,10 @@ namespace fase_01.application.dtos
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string? ConfirmPassword { get; set; }
 
+        /// <summary>
+        /// Permite receber a imagem pelo JSON em formato base64
+        /// </summary>
         [Display(Name = "Photo")]
-        public IFormFile? Photo { get; set; }
+        public string? PhotoBase64 { get; set; }
     }
 }

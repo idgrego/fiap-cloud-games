@@ -32,5 +32,7 @@ namespace fase_01.domain.entities
         public string? UrlGame { get; set; }
         public string? UrlVideo { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public GamePhoto? Photo { get; set; }
     }
 }
