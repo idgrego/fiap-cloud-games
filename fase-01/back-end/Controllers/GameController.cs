@@ -81,11 +81,11 @@ public class GameController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Update(int id, [FromBody] GameDto dto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         if (id != dto.Id)
             ModelState.AddModelError("Id", "O dto.Id não confere com o código do jogo");
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
         var existingEntity = await _gameRepository.GetByIdAsync(dto.Id);
         if (existingEntity == null) return NotFound();
