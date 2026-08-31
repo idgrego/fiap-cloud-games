@@ -73,7 +73,7 @@ namespace fase_01.infrastructure.data
                 entity.Property(e => e.Image).IsRequired();
                 entity.Property(e => e.Thumbnail);
                 entity.HasOne(e => e.Game)
-                      .WithOne()
+                      .WithOne(u => u.Photo)
                       .HasForeignKey<GamePhoto>(e => e.Id)
                       .OnDelete(DeleteBehavior.Cascade);
             });
