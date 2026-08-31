@@ -84,6 +84,9 @@ public class GameController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        if (id != dto.Id)
+            ModelState.AddModelError("Id", "O dto.Id não confere com o código do jogo");
+
         var existingEntity = await _gameRepository.GetByIdAsync(dto.Id);
         if (existingEntity == null) return NotFound();
 
