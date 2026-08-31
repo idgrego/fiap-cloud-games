@@ -407,38 +407,7 @@ namespace fase_01.application.services
         }
     }
 }
-```
 
-            using var thumbnailBitmap = new Bitmap(newWidth, newHeight);
-            using var graphics = Graphics.FromImage(thumbnailBitmap);
-
-            graphics.CompositingQuality = CompositingQuality.HighQuality;
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            graphics.SmoothingMode = SmoothingMode.HighQuality;
-
-            graphics.DrawImage(originalBitmap, 0, 0, newWidth, newHeight);
-
-            using var outputStream = new MemoryStream();
-            var imageFormat = file.ContentType.ToLower() switch
-            {
-                "image/png" => ImageFormat.Png,
-                "image/gif" => ImageFormat.Gif,
-                _ => ImageFormat.Jpeg
-            };
-
-            thumbnailBitmap.Save(outputStream, imageFormat);
-            return await Task.FromResult(outputStream.ToArray());
-        }
-#pragma warning restore CA1416
-
-        private async Task<byte[]> ConvertToBytesAsync(IFormFile file)
-        {
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            return memoryStream.ToArray();
-        }
-    }
-}
 ```
 
 Voltar para a [Visão Geral](index.md) | Ver anterior: [03. Camada de Infraestrutura](03-camada-infraestrutura.md) | Próximo passo: [05. Camada de Apresentação](05-camada-apresentacao.md)
