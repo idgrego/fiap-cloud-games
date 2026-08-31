@@ -10,27 +10,27 @@ Bem-vindo à documentação técnica do projeto **FIAP Cloud Games (Fase 1)**. E
 
 Abaixo estão os módulos documentados em ordem cronológica de desenvolvimento. Siga este fluxo para entender ou reproduzir o projeto do zero:
 
-0. [[00-modelagem-ddd-event-storming|Modelagem DDD (Event Storming & Diagrama de Contexto)]]
+0. [Modelagem DDD (Event Storming & Diagrama de Contexto)](00-modelagem-ddd-event-storming.md)
    - Event Storming dos fluxos de criação e autenticação de usuários e cadastro de jogos em Mermaid.
    - Diagrama de Contexto (*Context Map*) detalhando os Bounded Contexts da aplicação.
-1. [[01-scripts-banco-dados|Scripts e Estrutura de Banco de Dados]]
+1. [Scripts e Estrutura de Banco de Dados](01-scripts-banco-dados.md)
    - Criação de tabelas relacionais em SQL Server / Azure SQL (`Users`, `Accounts`, `UsersPhotos`, `Games`, `EnumGamesCategories`, `GamesPhotos`).
    - Script de carga e povoamento inicial de jogos (*seed data*).
-2. [[02-camada-dominio|Camada de Domínio (Domain Layer)]]
+2. [Camada de Domínio (Domain Layer)](02-camada-dominio.md)
    - Entidades de Domínio (`Game`, `User`, `Account`, `GamePhoto`, `UserPhoto`).
    - Padrão *Smart Enum* para Categorias (`GameCategory`).
    - Contratos e Interfaces de Repositório (`IRepositoryBase`, `IGameRepository`, `IUserRepository`, etc.).
-3. [[03-camada-infraestrutura|Camada de Infraestrutura (Infrastructure Layer)]]
+3. [Camada de Infraestrutura (Infrastructure Layer)](03-camada-infraestrutura.md)
    - Configuração do Entity Framework Core (`AppDbContext`).
    - Mapeamento Fluent API, Check Constraints e Cascading Deletes.
    - Implementação do Padrão *Repository* Genérico e Específico (`UserRepository` com autenticação).
    - Migrations do EF Core e Resiliência com Azure SQL (`EnableRetryOnFailure`).
-4. [[04-camada-aplicacao|Camada de Aplicação (Application Layer)]]
+4. [Camada de Aplicação (Application Layer)](04-camada-aplicacao.md)
    - DTOs (`GameDto`, `UserDto`, `RegisterDto`, `LoginDto` e `JwtSettingsDto`) com suporte a recebimento de foto em formato Base64.
    - Mapeamento bidirecional via Métodos de Extensão C# (`ToDto` e `ToEntity`).
    - Serviços de Autenticação e Segurança (`IPasswordService`, `IJwtTokenService`).
    - Serviço de Processamento de Imagens em Base64, Miniaturas com `System.Drawing.Common` e exclusão de mídia (`PhotoService`).
-5. [[05-camada-apresentacao|Camada de Apresentação (Presentation Layer - Web API)]]
+5. [Camada de Apresentação (Presentation Layer - Web API)](05-camada-apresentacao.md)
    - Controllers RESTful (`AccountController`, `GameController`, `UserController`).
    - Autenticação e Autorização via JWT Bearer Token (`[Authorize]`, `[Authorize(Roles = "Admin")]`).
    - Endpoints ajustados para recebimento de requisições `application/json` (`[FromBody]`) contendo foto em Base64 (`PhotoBase64`).
@@ -38,7 +38,7 @@ Abaixo estão os módulos documentados em ordem cronológica de desenvolvimento.
    - Regras de segurança em `UserController`: acesso restrito a dados do próprio usuário ou admin em `GetById`, e proteção contra remoção/exclusão do único administrador em `Update` e `Delete`.
    - Documentação Interativa com OpenAPI Nativo (`Microsoft.AspNetCore.OpenApi`) e Scalar UI (`Scalar.AspNetCore`).
    - Endpoints de streaming de mídia e respostas padronizadas em JSON.
-6. [[06-roteiro-testes-scalar|Roteiro de Testes Manuais via Scalar UI]]
+6. [Roteiro de Testes Manuais via Scalar UI](06-roteiro-testes-scalar.md)
    - Guia passo a passo para execução manual de requisições HTTP na interface interativa do Scalar (`/scalar/v1`).
    - Exemplos práticos em JSON com foto em Base64 válida para registro, criação e alteração.
    - Validação prática de atribuição do 1º administrador, autenticação JWT, exclusão de fotos de usuários e jogos, permissões de perfil, regras do último admin, scraping de fotos e tratamento de exceções.

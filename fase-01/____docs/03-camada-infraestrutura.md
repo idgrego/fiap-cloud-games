@@ -2,7 +2,7 @@
 
 #infrastructure #efcore #sqlserver #azuresql #repository-pattern #migrations
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[02-camada-dominio|02. Camada de Domínio]] | Próximo passo: [[04-camada-aplicacao|04. Camada de Aplicação]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [02. Camada de Domínio](02-camada-dominio.md) | Próximo passo: [04. Camada de Aplicação](04-camada-aplicacao.md)
 
 ---
 
@@ -263,4 +263,4 @@ dotnet ef database update
 
 ---
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[02-camada-dominio|02. Camada de Domínio]] | Próximo passo: [[04-camada-aplicacao|04. Camada de Aplicação]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [02. Camada de Domínio](02-camada-dominio.md) | Próximo passo: [04. Camada de Aplicação](04-camada-aplicacao.md)

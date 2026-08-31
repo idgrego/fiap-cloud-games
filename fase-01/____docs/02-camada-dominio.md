@@ -2,7 +2,7 @@
 
 #domain #csharp #smartenum #entities #repository-pattern
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]] | Próximo passo: [[03-camada-infraestrutura|03. Camada de Infraestrutura]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [01. Scripts de Banco de Dados](01-scripts-banco-dados.md) | Próximo passo: [03. Camada de Infraestrutura](03-camada-infraestrutura.md)
 
 ---
 
@@ -236,4 +236,4 @@ public interface IUserPhotoRepository : IRepositoryBase<UserPhoto, int> { }
 
 ---
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]] | Próximo passo: [[03-camada-infraestrutura|03. Camada de Infraestrutura]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [01. Scripts de Banco de Dados](01-scripts-banco-dados.md) | Próximo passo: [03. Camada de Infraestrutura](03-camada-infraestrutura.md)

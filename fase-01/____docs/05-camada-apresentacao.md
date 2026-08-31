@@ -2,7 +2,7 @@
 
 #aspnetcore #webapi #rest #jwt #openapi #scalar #controllers #csharp
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[04-camada-aplicacao|04. Camada de Aplicação]] | Ver próxima: [[06-roteiro-testes-scalar|06. Roteio de testes usando Scalar]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [04. Camada de Aplicação](04-camada-aplicacao.md) | Ver próxima: [06. Roteio de testes usando Scalar](06-roteiro-testes-scalar.md)
 
 ---
 
@@ -606,4 +606,4 @@ builder.Services.AddControllersWithViews();
 
 ---
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[04-camada-aplicacao|04. Camada de Aplicação]] | Ver próxima: [[06-roteiro-testes-scalar|06. Roteio de testes usando Scalar]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [04. Camada de Aplicação](04-camada-aplicacao.md) | Ver próxima: [06. Roteio de testes usando Scalar](06-roteiro-testes-scalar.md)

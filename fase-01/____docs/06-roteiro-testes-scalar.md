@@ -2,7 +2,7 @@
 
 #webapi #scalar #openapi #manual-testing #jwt #auth #governance #obsidian
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[05-camada-apresentacao|05. Camada de Apresentação]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [05. Camada de Apresentação](05-camada-apresentacao.md)
 
 ---
 
@@ -409,4 +409,4 @@ data:image/jpeg;base64,/9j/4gxYSUNDX1BST0ZJTEUAAQEAAAxITGlubwIQAABtbnRyUkdCIFhZW
 
 ---
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[05-camada-apresentacao|05. Camada de Apresentação]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [05. Camada de Apresentação](05-camada-apresentacao.md)

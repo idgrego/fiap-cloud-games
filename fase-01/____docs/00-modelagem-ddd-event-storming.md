@@ -2,7 +2,7 @@
 
 #ddd #event-storming #context-map #domain #architecture #obsidian #mermaid
 
-Voltar para a [[index|Visão Geral]] | Ver próximo: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]]
+Voltar para a [Visão Geral](index.md) | Ver próximo: [01. Scripts de Banco de Dados](01-scripts-banco-dados.md)
 
 ---
 
@@ -150,5 +150,5 @@ graph TD
 
 ---
 
-Voltar para a [[index|Visão Geral]] | Ver próximo: [[01-scripts-banco-dados|01. Scripts de Banco de Dados]]
+Voltar para a [Visão Geral](index.md) | Ver próximo: [01. Scripts de Banco de Dados](01-scripts-banco-dados.md)
 

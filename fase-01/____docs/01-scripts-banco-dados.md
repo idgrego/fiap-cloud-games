@@ -2,7 +2,7 @@
 
 #sqlserver #azuresql #database #ddl #dml
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[00-modelagem-ddd-event-storming|00. Modelagem DDD]] | Ver próximo: [[02-camada-dominio|02. Camada de Domínio]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [00. Modelagem DDD](00-modelagem-ddd-event-storming.md) | Ver próximo: [02. Camada de Domínio](02-camada-dominio.md)
 
 ---
 
@@ -121,5 +121,5 @@ VALUES
 
 ---
 
-Voltar para a [[index|Visão Geral]] | Ver anterior: [[00-modelagem-ddd-event-storming|00. Modelagem DDD]] | Ver próximo: [[02-camada-dominio|02. Camada de Domínio]]
+Voltar para a [Visão Geral](index.md) | Ver anterior: [00. Modelagem DDD](00-modelagem-ddd-event-storming.md) | Ver próximo: [02. Camada de Domínio](02-camada-dominio.md)
 
