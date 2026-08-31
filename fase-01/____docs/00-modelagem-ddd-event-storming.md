@@ -115,16 +115,16 @@ graph TD
     subgraph Boundary_Catalog ["🎮 Bounded Context: Catálogo de Jogos"]
         direction TB
         GameAgg[Agregação do jogo, categoria e foto do jogo]
-        PhotoSvc[Serviço de foto: gera o thumbnail (miniatura)]
+        PhotoSvc["Serviço de foto: gera o thumbnail (miniatura)"]
     end
 
-    subgraph Infrastructure ["☁️ Infraestrutura & Persistência"]
+    subgraph Infrastructure ["☁️ Infraestrutura e Persistência"]
         AppDb[(Contexto para o Azure SQL Database)]
     end
 
     %% Relacionamentos de Contexto (Envio / Recebimento)
-    Boundary_Auth -- "Fornece Tokens & Claims de Autorização [Envia]" --> Boundary_Catalog
-    Boundary_Catalog -- "Consome Identidade & Validação de Role Admin [Recebe]" --> Boundary_Auth
+    Boundary_Auth -->|"Fornece Tokens e Claims de Autorização (Envia)"| Boundary_Catalog
+    Boundary_Catalog -->|"Consome Identidade e Validação de Role Admin (Recebe)"| Boundary_Auth
 
     Boundary_Auth --> AppDb
     Boundary_Catalog --> AppDb
