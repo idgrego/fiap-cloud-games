@@ -10,10 +10,9 @@ O **FIAP Cloud Games** é um projeto de estudo e aprendizado prático desenvolvi
 
 1. [Sobre o Projeto](#-sobre-o-projeto)
 2. [Estrutura do Projeto e Fases](#-estrutura-do-projeto-e-fases)
-3. [Documentação e Uso do Obsidian](#-documentação-e-uso-do-obsidian)
-4. [Links das Documentações por Fase](#-links-das-documentações-por-fase)
-5. [Tutoriais e Guias Práticos](#-tutoriais-e-guias-práticos)
-6. [Tarefas e Entregáveis (TODO)](#-tarefas-e-entregáveis-todo)
+3. [Links das Documentações por Fase](#-links-das-documentações-por-fase)
+4. [Tutoriais e Guias Práticos](#-tutoriais-e-guias-práticos)
+5. [Tarefas e Entregáveis (TODO)](#-tarefas-e-entregáveis-todo)
 
 ---
 
@@ -26,14 +25,6 @@ A solução está estruturada em **5 fases** evolutivas ao longo do curso. Cada 
 * 📂 **`fase-03/`**: Fase 3 - *(A ser desenvolvida)*
 * 📂 **`fase-04/`**: Fase 4 - *(A ser desenvolvida)*
 * 📂 **`fase-05/`**: Fase 5 - *(A ser desenvolvida)*
-
----
-
-## 📚 Documentação e Uso do Obsidian
-
-Cada fase possui sua própria documentação dedicada armazenada dentro da pasta **`____docs`** da respectiva fase (por exemplo, `fase-01/____docs`).
-
-Toda a documentação foi criada e organizada para ser lida com a ajuda do **[Obsidian](https://obsidian.md/)**, um aplicativo de gestão de conhecimento baseado em arquivos Markdown. Ao abrir o repositório no Obsidian, é possível utilizar links internos (`[[...]]`), visualizar o grafo de conexões da arquitetura e navegar facilmente entre as diferentes camadas do sistema.
 
 ---
 
@@ -51,7 +42,7 @@ Acesse a documentação detalhada de cada fase pelos links abaixo:
 
 ## 🛠️ Tutoriais e Guias Práticos
 
-Os roteiros de criação de banco de dados, guias da CLI do .NET e comandos do EF Core para migrações foram movidos para um arquivo dedicado:
+Durante a implementação criei um mini-tutorial com instruções de itens que aprendi, tais como, roteiros de criação de banco de dados, guias da CLI do .NET e comandos do EF Core para migrações foram movidos para um arquivo dedicado:
 
 👉 **[Acessar TUTORIAIS.md](TUTORIAIS.md)**
 
