@@ -64,6 +64,8 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Update(int id, [FromBody] UserDto dto)
     {
+        if (dto == null || id != dto.Id) 
+            ModelState.AddModelError("Id", "O dto.Id não confere com o código do usuário");
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -127,6 +129,10 @@ public class UserController : ControllerBase
         }
 
         await _userRepository.DeleteAsync(id);
+
+        // se o próprio usuário se excluiu promove a desconexão do sistema
+        if (currentUserId == id) Response.Cookies.Delete("jwt_token");
+
         return NoContent();
     }
 
@@ -168,10 +174,11 @@ public class UserController : ControllerBase
 
         // Obtém o ID do usuário conectado via Claim
         var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var currentUserAdminClaim = User.FindFirst(ClaimTypes.Role)?.Value;
         int.TryParse(currentUserIdClaim, out var currentUserId);
 
         // Se for o próprio usuário ou um administrador tudo bem.
-        if (!(currentUserId == id || existingEntity.Admin))
+        if (!(currentUserId == id || currentUserAdminClaim == "Admin"))
         {
             ModelState.AddModelError("DefaultErrorMessage", "Apenas o próprio usuário ou um administrador por excluir a foto");
             return BadRequest(ModelState);
